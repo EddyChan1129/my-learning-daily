@@ -3,7 +3,6 @@
 import { FormEvent, useState } from "react";
 import { ContentEditor } from "@/components/ContentEditor";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
@@ -54,17 +53,38 @@ export function CardForm({
   }
 
   return (
-    <Card className="mt-4 p-4">
-      <form className="grid gap-4" onSubmit={handleSubmit}>
-      {error ? <p className="font-bold text-red-700">{error}</p> : null}
-      <Label>
-        Title
-        <Input
-          value={value.title}
-          onChange={(event) => setValue({ ...value, title: event.target.value })}
-          required
-        />
-      </Label>
+    <form
+      className="mt-4 grid gap-4 border-t border-stone-200 pt-4"
+      onSubmit={handleSubmit}
+    >
+      {error ? (
+        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-bold text-red-800">
+          {error}
+        </p>
+      ) : null}
+      <div className="grid gap-4 sm:grid-cols-[1fr_180px]">
+        <Label>
+          Title
+          <Input
+            value={value.title}
+            onChange={(event) =>
+              setValue({ ...value, title: event.target.value })
+            }
+            required
+          />
+        </Label>
+        <Label>
+          Date learned
+          <Input
+            type="date"
+            value={value.learned_date}
+            onChange={(event) =>
+              setValue({ ...value, learned_date: event.target.value })
+            }
+            required
+          />
+        </Label>
+      </div>
       <Label>
         Category
         <Select
@@ -79,17 +99,6 @@ export function CardForm({
           <option value="psycology">psycology</option>
           <option value="others">others</option>
         </Select>
-      </Label>
-      <Label>
-        Date learned
-        <Input
-          type="date"
-          value={value.learned_date}
-          onChange={(event) =>
-            setValue({ ...value, learned_date: event.target.value })
-          }
-          required
-        />
       </Label>
       <div className="grid gap-1.5">
         <span className="text-sm font-bold text-neutral-600">Content</span>
@@ -116,7 +125,6 @@ export function CardForm({
           {saving ? "Saving..." : submitLabel}
         </Button>
       </div>
-      </form>
-    </Card>
+    </form>
   );
 }
