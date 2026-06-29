@@ -8,11 +8,17 @@ import { sanitizeContent } from "@/utils/content";
 
 type Props = {
   value: string;
+  uploadFolder: string;
   onChange: (value: string) => void;
   onFirstImage: (imageUrl: string) => void;
 };
 
-export function ContentEditor({ value, onChange, onFirstImage }: Props) {
+export function ContentEditor({
+  value,
+  uploadFolder,
+  onChange,
+  onFirstImage,
+}: Props) {
   const { t } = useTranslation();
   const editorRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -68,7 +74,7 @@ export function ContentEditor({ value, onChange, onFirstImage }: Props) {
     setError("");
 
     try {
-      const imageUrl = await uploadLearningImage(file);
+      const imageUrl = await uploadLearningImage(file, uploadFolder);
       insertHtml(
         `<p><img class="content-image" src="${imageUrl}" alt="" /></p><p><br></p>`,
       );
@@ -141,7 +147,7 @@ export function ContentEditor({ value, onChange, onFirstImage }: Props) {
         </div>
         <div
           ref={editorRef}
-          className="min-h-72 cursor-text px-4 py-4 text-base text-neutral-950 outline-none [&_.content-image]:my-4 [&_.content-image]:max-h-80 [&_.content-image]:w-full [&_.content-image]:max-w-md [&_.content-image]:rounded-lg [&_.content-image]:object-contain [&_.text-large]:text-2xl"
+          className="learning-content min-h-72 cursor-text px-4 py-4 text-base text-neutral-950 outline-none [&_.text-large]:text-2xl"
           contentEditable
           tabIndex={0}
           onBlur={syncValue}

@@ -14,7 +14,15 @@ import type {
   LearningCard,
   LearningCardInput,
   LearningComment,
+  Profile,
 } from "@/types/learning";
+import {
+  cloudinaryPublicIdFromUrl,
+  cloudinaryPublicIdsFromContent,
+  cloudinaryLearningFolder,
+  cloudinaryLearningFolderFromUrl,
+  deleteCloudinaryAssets,
+} from "@/utils/cloudinary";
 import {
   formatLearningCardError,
   isUuid,
@@ -29,6 +37,7 @@ export function LearningDetail({ slug }: { slug: string }) {
   const { t } = useTranslation();
   const [card, setCard] = useState<LearningCard | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState("");
   const [comments, setComments] = useState<LearningComment[]>([]);
@@ -45,32 +54,60 @@ export function LearningDetail({ slug }: { slug: string }) {
     async function loadCard() {
       if (!supabase) return;
 
+      const column = isUuid(slug) ? "id" : "slug";
       const { data, error } = await supabase
         .from("learning_cards")
         .select("*")
-        .eq(isUuid(slug) ? "id" : "slug", slug)
-        .single();
+        .eq(column, slug)
+        .order("created_at", { ascending: false })
+        .limit(1);
 
       if (error) {
         setMessage(formatLearningCardError(error.message));
         return;
       }
 
-      setCard(data);
-      await loadComments(data.id);
+      const cardData = data?.[0] ?? (await loadCardBySlugPrefix(slug));
+
+      if (!cardData) {
+        setMessage("Learning card not found.");
+        return;
+      }
+
+      setCard(cardData);
+      await loadComments(cardData.id);
     }
 
     loadCard();
 
     if (!supabase) return;
 
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+      if (data.user) loadProfile(data.user);
+    });
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      if (session?.user) loadProfile(session.user);
+      if (!session?.user) setProfile(null);
     });
 
     return () => data.subscription.unsubscribe();
   }, [slug]);
+
+  async function loadCardBySlugPrefix(value: string) {
+    if (!supabase || isUuid(value)) return null;
+
+    const baseSlug = value.replace(/-\d+$/, "");
+    const { data } = await supabase
+      .from("learning_cards")
+      .select("*")
+      .ilike("slug", `${baseSlug}%`)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    return data?.[0] ?? null;
+  }
 
   async function loadComments(cardId: string) {
     if (!supabase) return;
@@ -89,6 +126,18 @@ export function LearningDetail({ slug }: { slug: string }) {
 
     setComments(data ?? []);
     setCommentMessage("");
+  }
+
+  async function loadProfile(currentUser: User) {
+    if (!supabase) return;
+
+    const { data } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", currentUser.id)
+      .maybeSingle();
+
+    setProfile(data);
   }
 
   async function updateCard(value: LearningCardInput) {
@@ -113,6 +162,30 @@ export function LearningDetail({ slug }: { slug: string }) {
 
   async function deleteCard() {
     if (!supabase || !card || !confirm("Delete this learning card?")) return;
+
+    try {
+      const folders = Array.from(new Set(
+        [
+          cloudinaryLearningFolder(ownerName(user, profile), card.id),
+          cloudinaryLearningFolderFromUrl(card.image_url, card.id),
+        ].filter((folder): folder is string => Boolean(folder)),
+      ));
+      const publicIds = Array.from(new Set(
+        [
+          cloudinaryPublicIdFromUrl(card.image_url),
+          ...cloudinaryPublicIdsFromContent(card.content),
+        ].filter((publicId): publicId is string => Boolean(publicId)),
+      ));
+
+      await deleteCloudinaryAssets({ folders, publicIds });
+    } catch (deleteError) {
+      setMessage(
+        deleteError instanceof Error
+          ? deleteError.message
+          : "Cloudinary folder delete failed.",
+      );
+      return;
+    }
 
     const { error } = await supabase
       .from("learning_cards")
@@ -218,6 +291,7 @@ export function LearningDetail({ slug }: { slug: string }) {
         <CardForm
           initialValue={formValue}
           submitLabel={t("save")}
+          uploadFolder={cloudinaryLearningFolder(ownerName(user, profile), card.id)}
           onSubmit={updateCard}
           onCancel={() => setEditing(false)}
         />
@@ -233,7 +307,7 @@ export function LearningDetail({ slug }: { slug: string }) {
             {dayjs(card.learned_date).format("YYYY-MM-DD")}
           </time>
           <div
-            className="mt-6 text-lg text-neutral-950 [&_.content-image]:my-4 [&_.content-image]:max-h-80 [&_.content-image]:w-full [&_.content-image]:max-w-md [&_.content-image]:rounded-lg [&_.content-image]:object-contain [&_.text-large]:text-2xl"
+            className="learning-content mt-6 text-lg text-neutral-950 [&_.text-large]:text-2xl"
             dangerouslySetInnerHTML={{ __html: sanitizeContent(card.content) }}
           />
           <p className="mt-7 text-sm text-neutral-600">
@@ -326,4 +400,8 @@ export function LearningDetail({ slug }: { slug: string }) {
       </section>
     </main>
   );
+}
+
+function ownerName(user: User | null, profile: Profile | null) {
+  return profile?.username ?? user?.email?.split("@")[0] ?? "user";
 }

@@ -34,3 +34,31 @@
     font: inherit;
   }
 }
+
+@layer components {
+  .learning-content p:has(.content-image) {
+    display: inline-block;
+    margin: 1rem 1rem 1rem 0;
+    vertical-align: top;
+  }
+
+  .learning-content .content-image {
+    display: block;
+    width: auto;
+    max-width: min(100%, 28rem);
+    max-height: 22rem;
+    object-fit: contain;
+    border-radius: 0.5rem;
+  }
+
+  @media (max-width: 640px) {
+    .learning-content p:has(.content-image) {
+      display: block;
+      margin-right: 0;
+    }
+
+    .learning-content .content-image {
+      max-width: 100%;
+    }
+  }
+}

@@ -1,0 +1,92 @@
+import { NextResponse } from "next/server";
+
+export async function DELETE(request: Request) {
+  const cloudName =
+    process.env.CLOUDINARY_CLOUD_NAME ??
+    process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+  const apiKey = process.env.CLOUDINARY_API_KEY;
+  const apiSecret = process.env.CLOUDINARY_API_SECRET;
+  const queryFolder = new URL(request.url).searchParams.get("folder");
+  const body = await request.json().catch(() => null);
+  const folders: string[] = Array.isArray(body?.folders)
+    ? body.folders.filter(
+        (folder: unknown): folder is string => typeof folder === "string",
+      )
+    : queryFolder
+      ? [queryFolder]
+      : [];
+  const publicIds: string[] = Array.isArray(body?.publicIds)
+    ? body.publicIds.filter(
+        (publicId: unknown): publicId is string =>
+          typeof publicId === "string",
+      )
+    : [];
+  const missing = [
+    !cloudName && "CLOUDINARY_CLOUD_NAME",
+    !apiKey && "CLOUDINARY_API_KEY",
+    !apiSecret && "CLOUDINARY_API_SECRET",
+    folders.length === 0 && publicIds.length === 0 && "folders or publicIds",
+  ].filter(Boolean);
+
+  if (missing.length > 0) {
+    return NextResponse.json(
+      { error: `Missing ${missing.join(", ")}.` },
+      { status: 400 },
+    );
+  }
+
+  const auth = `Basic ${Buffer.from(`${apiKey}:${apiSecret}`).toString("base64")}`;
+  const baseUrl = `https://api.cloudinary.com/v1_1/${cloudName}`;
+
+  for (const folder of folders) {
+    if (/%|[^\x20-\x7E]/.test(folder)) continue;
+
+    const prefix = `${folder.replace(/\/$/, "")}/`;
+    const deleteResources = await fetch(
+      `${baseUrl}/resources/image/upload?prefix=${encodeURIComponent(prefix)}&invalidate=true`,
+      { headers: { Authorization: auth }, method: "DELETE" },
+    );
+
+    if (!deleteResources.ok) {
+      return NextResponse.json(
+        { error: await deleteResources.text() },
+        { status: deleteResources.status },
+      );
+    }
+
+    const folderPath = folder
+      .split("/")
+      .map((part) => encodeURIComponent(part))
+      .join("/");
+    const deleteFolder = await fetch(`${baseUrl}/folders/${folderPath}`, {
+      headers: { Authorization: auth },
+      method: "DELETE",
+    });
+
+    if (!deleteFolder.ok && deleteFolder.status !== 404) {
+      return NextResponse.json(
+        { error: await deleteFolder.text() },
+        { status: deleteFolder.status },
+      );
+    }
+  }
+
+  if (publicIds.length > 0) {
+    const query = publicIds
+      .map((publicId) => `public_ids[]=${encodeURIComponent(publicId)}`)
+      .join("&");
+    const deleteResources = await fetch(
+      `${baseUrl}/resources/image/upload?${query}&invalidate=true`,
+      { headers: { Authorization: auth }, method: "DELETE" },
+    );
+
+    if (!deleteResources.ok) {
+      return NextResponse.json(
+        { error: await deleteResources.text() },
+        { status: deleteResources.status },
+      );
+    }
+  }
+
+  return NextResponse.json({ ok: true });
+}

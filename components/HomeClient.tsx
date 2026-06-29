@@ -12,6 +12,7 @@ import type {
   LearningCardInput,
   Profile,
 } from "@/types/learning";
+import { cloudinaryLearningFolder } from "@/utils/cloudinary";
 import { emptyCard, formatLearningCardError, slugify } from "@/utils/learning";
 import type { User } from "@supabase/supabase-js";
 
@@ -25,15 +26,22 @@ export function HomeClient() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [draftCardId, setDraftCardId] = useState(() => crypto.randomUUID());
+  const [currentProfile, setCurrentProfile] = useState<Profile | null>(null);
 
   useEffect(() => {
     loadCards();
 
     if (!supabase) return;
 
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+      if (data.user) loadCurrentProfile(data.user);
+    });
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      if (session?.user) loadCurrentProfile(session.user);
+      if (!session?.user) setCurrentProfile(null);
     });
 
     return () => data.subscription.unsubscribe();
@@ -83,10 +91,23 @@ export function HomeClient() {
     );
   }
 
+  async function loadCurrentProfile(currentUser: User) {
+    if (!supabase) return;
+
+    const { data } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", currentUser.id)
+      .maybeSingle();
+
+    setCurrentProfile(data);
+  }
+
   async function createCard(value: LearningCardInput) {
     if (!supabase || !user) return;
 
     const { error } = await supabase.from("learning_cards").insert({
+      id: draftCardId,
       ...value,
       slug: slugify(value.title),
       user_id: user.id,
@@ -95,7 +116,13 @@ export function HomeClient() {
     if (error) throw error;
 
     setShowForm(false);
+    setDraftCardId(crypto.randomUUID());
     await loadCards();
+  }
+
+  function toggleForm() {
+    if (!showForm) setDraftCardId(crypto.randomUUID());
+    setShowForm(!showForm);
   }
 
   const latestDate = cards[0]?.learned_date
@@ -103,18 +130,21 @@ export function HomeClient() {
     : "-";
   const contributorCount = new Set(cards.map((card) => card.user_id ?? "guest"))
     .size;
+  const ownerName = currentProfile?.username ?? user?.email?.split("@")[0];
+  const wallTitle = ownerName ? `${ownerName}讀書生活` : t("dailyWall");
+  const wallSubtitle = ownerName ? `${ownerName} Study Life` : "Study Life";
 
   return (
     <main className="relative mx-auto w-[min(1160px,calc(100%_-_28px))] border-x border-stone-300 px-4 pb-16 pt-24 shadow-[inset_1px_0_0_rgba(255,255,255,0.75),inset_-1px_0_0_rgba(255,255,255,0.75)] sm:w-[min(1160px,calc(100%_-_40px))] sm:px-8 sm:pt-28">
       <section className="grid gap-6 pb-8 sm:pb-12 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end">
         <div className="border-l border-neutral-950 pl-4 sm:pl-6">
           <p className="mb-4 text-sm font-black text-emerald-800">
-            元浩讀書生活
+            {wallTitle}
           </p>
           <h1 className="max-w-3xl text-[clamp(40px,13vw,92px)] font-black leading-[0.88] tracking-normal text-neutral-950">
-            {t("dailyWall")}
+            {wallTitle}
             <span className="mt-2 block text-[0.38em] leading-none text-neutral-500">
-              Study Life
+              {wallSubtitle}
             </span>
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-neutral-700 sm:text-xl">
@@ -153,7 +183,7 @@ export function HomeClient() {
               <p className="font-black text-neutral-950">{t("addCard")}</p>
               <p className="text-sm text-neutral-600">{t("heroBody")}</p>
             </div>
-            <Button onClick={() => setShowForm(!showForm)}>
+            <Button onClick={toggleForm}>
               {showForm ? t("close") : t("newCard")}
             </Button>
           </div>
@@ -161,6 +191,10 @@ export function HomeClient() {
             <CardForm
               initialValue={emptyCard}
               submitLabel={t("create")}
+              uploadFolder={cloudinaryLearningFolder(
+                currentProfile?.username ?? user.email?.split("@")[0] ?? "user",
+                draftCardId,
+              )}
               onSubmit={createCard}
             />
           ) : null}
@@ -220,13 +254,13 @@ function LearningCardLink({
   return (
     <Link
       className="group overflow-hidden border border-stone-300 bg-white shadow-[0_10px_28px_rgba(26,26,26,0.05)] transition hover:-translate-y-1 hover:border-neutral-950 hover:shadow-[6px_6px_0_#1a1a1a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
-      href={`/learning/${card.slug ?? card.id}`}
+      href={`/learning/${card.id}`}
     >
-      <div className="grid aspect-[4/3] place-items-center border-b border-stone-200 bg-[#eef4ee] text-5xl font-black text-emerald-900">
+      <div className="grid h-64 place-items-center overflow-hidden border-b border-stone-200 bg-[#eef4ee] text-5xl font-black text-emerald-900 sm:h-72 lg:h-64">
         {card.image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+            className="h-full w-full object-cover object-top transition duration-300 group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
             src={card.image_url}
             alt=""
           />
@@ -263,7 +297,7 @@ function LoadingGrid() {
           className="overflow-hidden border border-stone-300 bg-white shadow-[0_10px_28px_rgba(26,26,26,0.04)]"
           key={item}
         >
-          <div className="aspect-[4/3] animate-pulse border-b border-stone-200 bg-stone-200" />
+          <div className="h-64 animate-pulse border-b border-stone-200 bg-stone-200 sm:h-72 lg:h-64" />
           <div className="space-y-3 p-5">
             <div className="h-3 w-20 animate-pulse bg-stone-200" />
             <div className="h-8 w-3/4 animate-pulse bg-stone-200" />

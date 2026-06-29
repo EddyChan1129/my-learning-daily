@@ -14,6 +14,7 @@ import { validateCard } from "@/utils/learning";
 type Props = {
   initialValue: LearningCardInput;
   submitLabel: string;
+  uploadFolder: string;
   onSubmit: (value: LearningCardInput) => Promise<void>;
   onCancel?: () => void;
 };
@@ -21,6 +22,7 @@ type Props = {
 export function CardForm({
   initialValue,
   submitLabel,
+  uploadFolder,
   onSubmit,
   onCancel,
 }: Props) {
@@ -108,6 +110,7 @@ export function CardForm({
         </span>
         <ContentEditor
           value={value.content}
+          uploadFolder={uploadFolder}
           onChange={(content) =>
             setValue((currentValue) => ({ ...currentValue, content }))
           }
