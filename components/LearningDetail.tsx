@@ -3,8 +3,9 @@
 import Link from "next/link";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { CardForm } from "@/components/CardForm";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,6 +26,7 @@ import type { User } from "@supabase/supabase-js";
 const supabase = getSupabase();
 
 export function LearningDetail({ slug }: { slug: string }) {
+  const { t } = useTranslation();
   const [card, setCard] = useState<LearningCard | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [editing, setEditing] = useState(false);
@@ -77,6 +79,7 @@ export function LearningDetail({ slug }: { slug: string }) {
       .from("learning_comments")
       .select("*")
       .eq("card_id", cardId)
+      .eq("viod", false)
       .order("created_at", { ascending: true });
 
     if (error) {
@@ -130,7 +133,7 @@ export function LearningDetail({ slug }: { slug: string }) {
     const authorName = commentName.trim() || "訪客";
     const body = commentBody.trim();
     if (!body) {
-      setCommentMessage("請先輸入留言。Write a comment first.");
+      setCommentMessage(t("writeComment"));
       return;
     }
 
@@ -156,7 +159,7 @@ export function LearningDetail({ slug }: { slug: string }) {
 
     const { error } = await supabase
       .from("learning_comments")
-      .delete()
+      .update({ viod: true })
       .eq("id", commentId);
 
     if (error) {
@@ -172,8 +175,8 @@ export function LearningDetail({ slug }: { slug: string }) {
   if (!supabase) {
     return (
       <main className="mx-auto w-[min(820px,calc(100%_-_32px))] py-8 sm:py-12">
-        <Link className="inline-block font-bold text-neutral-600" href="/">
-          返回 Back
+        <Link className={buttonVariants({ variant: "secondary" })} href="/">
+          {t("back")}
         </Link>
         <p className="mt-5 text-neutral-600">
           請先加入 Supabase env vars。Add Supabase env vars to load learning cards.
@@ -185,8 +188,8 @@ export function LearningDetail({ slug }: { slug: string }) {
   if (!card) {
     return (
       <main className="mx-auto w-[min(820px,calc(100%_-_32px))] py-8 sm:py-12">
-        <Link className="inline-block font-bold text-neutral-600" href="/">
-          返回 Back
+        <Link className={buttonVariants({ variant: "secondary" })} href="/">
+          {t("back")}
         </Link>
         <p className="mt-5 text-neutral-600">{message || "Loading..."}</p>
       </main>
@@ -204,14 +207,17 @@ export function LearningDetail({ slug }: { slug: string }) {
 
   return (
     <main className="mx-auto w-[min(820px,calc(100%_-_32px))] py-8 sm:py-12">
-      <Link className="mb-5 inline-block font-bold text-neutral-600" href="/">
-        返回 Back
+      <Link
+        className={buttonVariants({ className: "mb-5", variant: "secondary" })}
+        href="/"
+      >
+        {t("back")}
       </Link>
 
       {editing ? (
         <CardForm
           initialValue={formValue}
-          submitLabel="Update card"
+          submitLabel={t("save")}
           onSubmit={updateCard}
           onCancel={() => setEditing(false)}
         />
@@ -237,10 +243,10 @@ export function LearningDetail({ slug }: { slug: string }) {
           {canEdit ? (
             <div className="mt-6 flex flex-wrap justify-end gap-2.5">
               <Button variant="secondary" onClick={() => setEditing(true)}>
-                編輯 Edit
+                {t("edit")}
               </Button>
               <Button variant="destructive" onClick={deleteCard}>
-                刪除 Delete
+                {t("delete")}
               </Button>
             </div>
           ) : null}
@@ -249,11 +255,10 @@ export function LearningDetail({ slug }: { slug: string }) {
       <section className="mt-6 border border-neutral-950 bg-white p-4 shadow-[6px_6px_0_#1a1a1a] sm:p-5">
         <div className="mb-4">
           <h2 className="text-2xl font-black text-neutral-950">
-            留言 Comments
+            {t("comments")}
           </h2>
           <p className="text-sm text-neutral-600">
-            未登入都可以留言；你可以改自己的顯示名。
-            Visitors can comment and choose a display name.
+            {t("heroBody")}
           </p>
         </div>
 
@@ -261,28 +266,28 @@ export function LearningDetail({ slug }: { slug: string }) {
           <Input
             value={commentName}
             onChange={(event) => setCommentName(event.target.value)}
-            placeholder="你的名字 / 訪客123456 Your name"
+            placeholder={t("name")}
             maxLength={40}
           />
           <Textarea
             className="min-h-24"
             value={commentBody}
             onChange={(event) => setCommentBody(event.target.value)}
-            placeholder="寫低你的想法... Leave a comment..."
+            placeholder={t("writeComment")}
             maxLength={1000}
           />
           {commentMessage ? (
             <p className="text-sm font-bold text-red-700">{commentMessage}</p>
           ) : null}
           <div className="flex justify-end">
-            <Button onClick={createComment}>送出留言 Post comment</Button>
+            <Button onClick={createComment}>{t("postComment")}</Button>
           </div>
         </div>
 
         <div className="mt-6 grid gap-3">
           {comments.length === 0 ? (
             <p className="border border-dashed border-stone-300 p-4 text-sm text-neutral-600">
-              暫時未有留言。No comments yet.
+              {t("emptyComments")}
             </p>
           ) : (
             comments.map((comment) => (
@@ -307,7 +312,7 @@ export function LearningDetail({ slug }: { slug: string }) {
                       variant="destructive"
                       onClick={() => deleteComment(comment.id)}
                     >
-                      刪除 Delete
+                      {t("delete")}
                     </Button>
                   ) : null}
                 </div>

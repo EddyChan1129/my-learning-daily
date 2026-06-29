@@ -13,9 +13,11 @@
     "@supabase/supabase-js": "^2.108.2",
     "clsx": "^2.1.1",
     "dayjs": "^1.11.21",
+    "i18next": "^26.3.3",
     "next": "^16.2.9",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
+    "react-i18next": "^17.0.8",
     "tailwind-merge": "^3.6.0",
     "zod": "^4.4.3"
   },

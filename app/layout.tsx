@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { AuthButton } from "@/components/AuthButton";
+import { Footer } from "@/components/Footer";
+import { I18nProvider } from "@/components/I18nProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -15,8 +17,11 @@ export default function RootLayout({
   return (
     <html lang="zh-Hant">
       <body>
-        <AuthButton />
-        {children}
+        <I18nProvider>
+          <AuthButton />
+          {children}
+          <Footer />
+        </I18nProvider>
       </body>
     </html>
   );

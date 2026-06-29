@@ -10,6 +10,7 @@ export type LearningCard = {
   created_at: string | null;
   updated_at: string | null;
   user_id: string | null;
+  profiles?: Profile | null;
 };
 
 export type LearningCardInput = {
@@ -27,4 +28,14 @@ export type LearningComment = {
   author_name: string;
   body: string;
   created_at: string | null;
+  viod: boolean;
+};
+
+export type Profile = {
+  id: string;
+  username: string;
+  description: string | null;
+  photo_url: string | null;
+  created_at: string | null;
+  updated_at: string | null;
 };

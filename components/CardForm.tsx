@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ContentEditor } from "@/components/ContentEditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ export function CardForm({
   onSubmit,
   onCancel,
 }: Props) {
+  const { t } = useTranslation();
   const [value, setValue] = useState(initialValue);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -64,7 +66,7 @@ export function CardForm({
       ) : null}
       <div className="grid gap-4 sm:grid-cols-[1fr_180px]">
         <Label>
-          Title
+          {t("title")}
           <Input
             value={value.title}
             onChange={(event) =>
@@ -74,7 +76,7 @@ export function CardForm({
           />
         </Label>
         <Label>
-          Date learned
+          {t("dateLearned")}
           <Input
             type="date"
             value={value.learned_date}
@@ -86,7 +88,7 @@ export function CardForm({
         </Label>
       </div>
       <Label>
-        Category
+        {t("category")}
         <Select
           value={value.category}
           onChange={(event) =>
@@ -101,7 +103,9 @@ export function CardForm({
         </Select>
       </Label>
       <div className="grid gap-1.5">
-        <span className="text-sm font-bold text-neutral-600">Content</span>
+        <span className="text-sm font-bold text-neutral-600">
+          {t("content")}
+        </span>
         <ContentEditor
           value={value.content}
           onChange={(content) =>
@@ -118,11 +122,11 @@ export function CardForm({
       <div className="flex flex-wrap justify-end gap-2.5">
         {onCancel ? (
           <Button type="button" variant="secondary" onClick={onCancel}>
-            Cancel
+            {t("cancel")}
           </Button>
         ) : null}
         <Button disabled={saving} type="submit">
-          {saving ? "Saving..." : submitLabel}
+          {saving ? t("saving") : submitLabel}
         </Button>
       </div>
     </form>

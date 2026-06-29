@@ -3,18 +3,24 @@
 import dayjs from "dayjs";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { CardForm } from "@/components/CardForm";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { getSupabase } from "@/lib/supabase";
-import type { LearningCard, LearningCardInput } from "@/types/learning";
-import { bilingual } from "@/utils/i18n";
+import type {
+  LearningCard,
+  LearningCardInput,
+  Profile,
+} from "@/types/learning";
 import { emptyCard, formatLearningCardError, slugify } from "@/utils/learning";
 import type { User } from "@supabase/supabase-js";
 
 const supabase = getSupabase();
 
 export function HomeClient() {
+  const { t } = useTranslation();
   const [cards, setCards] = useState<LearningCard[]>([]);
+  const [profiles, setProfiles] = useState<Record<string, Profile>>({});
   const [user, setUser] = useState<User | null>(null);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -31,6 +37,7 @@ export function HomeClient() {
     });
 
     return () => data.subscription.unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function loadCards() {
@@ -53,8 +60,27 @@ export function HomeClient() {
     }
 
     setCards(data ?? []);
+    await loadProfiles(data ?? []);
     setMessage("");
     setLoading(false);
+  }
+
+  async function loadProfiles(nextCards: LearningCard[]) {
+    if (!supabase) return;
+
+    const userIds = Array.from(
+      new Set(nextCards.map((card) => card.user_id).filter(Boolean)),
+    ) as string[];
+    if (userIds.length === 0) return;
+
+    const { data } = await supabase
+      .from("profiles")
+      .select("*")
+      .in("id", userIds);
+
+    setProfiles(
+      Object.fromEntries((data ?? []).map((profile) => [profile.id, profile])),
+    );
   }
 
   async function createCard(value: LearningCardInput) {
@@ -74,7 +100,7 @@ export function HomeClient() {
 
   const latestDate = cards[0]?.learned_date
     ? dayjs(cards[0].learned_date).format("MMM D")
-    : "未有 / None";
+    : "-";
   const contributorCount = new Set(cards.map((card) => card.user_id ?? "guest"))
     .size;
 
@@ -86,36 +112,32 @@ export function HomeClient() {
             Eddy 每日學習
           </p>
           <h1 className="max-w-3xl text-[clamp(40px,13vw,92px)] font-black leading-[0.88] tracking-normal text-neutral-950">
-            每日學習牆
+            {t("dailyWall")}
             <span className="mt-2 block text-[0.38em] leading-none text-neutral-500">
-              Daily learning wall
+              Eddy Daily
             </span>
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-neutral-700 sm:text-xl">
-            不同人每日留低一張學習卡：截圖、短觀察、值得之後搵返的想法。
-            <span className="mt-1 block text-base text-neutral-500 sm:text-lg">
-              Everyone can register, post a daily learning note, and leave
-              comments.
-            </span>
+            {t("heroBody")}
           </p>
         </div>
 
         <div className="grid grid-cols-3 border-y border-neutral-950 bg-white text-neutral-950 shadow-[8px_8px_0_#1a1a1a] lg:grid-cols-1">
           <div className="border-r border-neutral-950 p-3 lg:border-b lg:border-r-0">
             <p className="text-xs font-black uppercase text-neutral-500">
-              Cards / 卡
+              {t("cards")}
             </p>
             <p className="mt-1 text-3xl font-black">{cards.length}</p>
           </div>
           <div className="border-r border-neutral-950 p-3 lg:border-b lg:border-r-0">
             <p className="text-xs font-black uppercase text-neutral-500">
-              People / 人
+              {t("people")}
             </p>
             <p className="mt-1 text-3xl font-black">{contributorCount}</p>
           </div>
           <div className="p-3">
             <p className="text-xs font-black uppercase text-neutral-500">
-              Latest / 最新
+              {t("latest")}
             </p>
             <p className="mt-1 text-2xl font-black">{latestDate}</p>
           </div>
@@ -128,21 +150,17 @@ export function HomeClient() {
         <section className="mb-8 border border-neutral-950 bg-[#fffdf8] p-4 shadow-[6px_6px_0_#1a1a1a]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="font-black text-neutral-950">
-                {bilingual({ zh: "新增今日學習卡", en: "Add today's card" })}
-              </p>
-              <p className="text-sm text-neutral-600">
-                貼圖，再寫低你學到咩。 Paste an image, then write the idea.
-              </p>
+              <p className="font-black text-neutral-950">{t("addCard")}</p>
+              <p className="text-sm text-neutral-600">{t("heroBody")}</p>
             </div>
             <Button onClick={() => setShowForm(!showForm)}>
-              {showForm ? "關閉 Close" : "新學習卡 New card"}
+              {showForm ? t("close") : t("newCard")}
             </Button>
           </div>
           {showForm ? (
             <CardForm
               initialValue={emptyCard}
-              submitLabel="建立 Create"
+              submitLabel={t("create")}
               onSubmit={createCard}
             />
           ) : null}
@@ -152,16 +170,16 @@ export function HomeClient() {
       <div className="mb-4 flex items-end justify-between gap-4 border-b border-stone-300 pb-3">
         <div>
           <h2 className="text-2xl font-black tracking-normal text-neutral-950">
-            學習牆 Learning wall
+            {t("learningWall")}
           </h2>
-          <p className="text-sm text-neutral-600">
-            最新卡排先，按人同日期快速掃。 Newest notes first.
-          </p>
+          <p className="text-sm text-neutral-600">{t("heroBody")}</p>
         </div>
       </div>
 
       {loading ? <LoadingGrid /> : null}
-      {!loading && cards.length > 0 ? <LearningCardGrid cards={cards} /> : null}
+      {!loading && cards.length > 0 ? (
+        <LearningCardGrid cards={cards} profiles={profiles} />
+      ) : null}
       {!loading && cards.length === 0 && !message ? (
         <EmptyState canCreate={Boolean(user)} />
       ) : null}
@@ -169,20 +187,36 @@ export function HomeClient() {
   );
 }
 
-function LearningCardGrid({ cards }: { cards: LearningCard[] }) {
+function LearningCardGrid({
+  cards,
+  profiles,
+}: {
+  cards: LearningCard[];
+  profiles: Record<string, Profile>;
+}) {
   return (
     <section
       className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
       aria-label="Learning cards"
     >
       {cards.map((card) => (
-        <LearningCardLink card={card} key={card.id} />
+        <LearningCardLink
+          card={card}
+          key={card.id}
+          profile={card.user_id ? profiles[card.user_id] : undefined}
+        />
       ))}
     </section>
   );
 }
 
-function LearningCardLink({ card }: { card: LearningCard }) {
+function LearningCardLink({
+  card,
+  profile,
+}: {
+  card: LearningCard;
+  profile?: Profile;
+}) {
   return (
     <Link
       className="group overflow-hidden border border-stone-300 bg-white shadow-[0_10px_28px_rgba(26,26,26,0.05)] transition hover:-translate-y-1 hover:border-neutral-950 hover:shadow-[6px_6px_0_#1a1a1a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
@@ -203,7 +237,7 @@ function LearningCardLink({ card }: { card: LearningCard }) {
       <div className="p-4 sm:p-5">
         <div className="mb-3 flex items-center justify-between gap-3 text-xs font-black uppercase text-neutral-500">
           <p>
-            {card.category} · {authorLabel(card.user_id)}
+            {card.category} · {authorLabel(card.user_id, profile)}
           </p>
           <time>{dayjs(card.learned_date).format("YYYY-MM-DD")}</time>
         </div>
@@ -254,40 +288,37 @@ function ErrorState({
       <p className="font-black">Could not load learning cards.</p>
       <p className="mt-1 text-sm">{message}</p>
       <Button className="mt-4" variant="secondary" onClick={onRetry}>
-        重試 Try again
+        Try again
       </Button>
     </div>
   );
 }
 
 function EmptyState({ canCreate }: { canCreate: boolean }) {
+  const { t } = useTranslation();
+
   return (
     <div className="border border-dashed border-neutral-400 bg-white p-6 text-neutral-700 shadow-[0_10px_28px_rgba(26,26,26,0.04)] sm:p-8">
       <p className="text-2xl font-black text-neutral-950">
-        第一張學習卡由這裡開始。
-        <span className="mt-1 block text-base text-neutral-500">
-          Your first learning card starts here.
-        </span>
+        {t("emptyWall")}
       </p>
       <p className="mt-2 max-w-xl leading-relaxed">
-        註冊後可以新增自己的 daily learning；未登入都可以入卡片留言。
-        <span className="block text-neutral-500">
-          Register to post cards. Visitors can still comment.
-        </span>
+        {t("heroBody")}
       </p>
       {!canCreate ? (
         <Link
-          className="mt-5 inline-flex min-h-11 items-center justify-center rounded-lg bg-neutral-950 px-4 py-2 text-sm font-bold text-white transition hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950"
+          className={buttonVariants({ className: "mt-5" })}
           href="/login"
         >
-          登入 / 註冊 Login / Register
+          {t("login")} / {t("register")}
         </Link>
       ) : null}
     </div>
   );
 }
 
-function authorLabel(userId: string | null) {
+function authorLabel(userId: string | null, profile?: Profile) {
+  if (profile) return profile.username;
   if (!userId) return "訪客 Guest";
   return `作者 ${userId.slice(0, 6)}`;
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent, ClipboardEvent, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { uploadLearningImage } from "@/utils/cloudinary";
 import { sanitizeContent } from "@/utils/content";
@@ -12,6 +13,7 @@ type Props = {
 };
 
 export function ContentEditor({ value, onChange, onFirstImage }: Props) {
+  const { t } = useTranslation();
   const editorRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -110,7 +112,7 @@ export function ContentEditor({ value, onChange, onFirstImage }: Props) {
             onMouseDown={(event) => event.preventDefault()}
             onClick={() => runCommand("bold")}
           >
-            Bold
+            {t("bold")}
           </Button>
           <Button
             type="button"
@@ -118,7 +120,7 @@ export function ContentEditor({ value, onChange, onFirstImage }: Props) {
             onMouseDown={(event) => event.preventDefault()}
             onClick={() => runCommand("large")}
           >
-            Large
+            {t("large")}
           </Button>
           <Button
             type="button"
@@ -127,7 +129,7 @@ export function ContentEditor({ value, onChange, onFirstImage }: Props) {
             onMouseDown={(event) => event.preventDefault()}
             onClick={() => fileInputRef.current?.click()}
           >
-            {uploading ? "Uploading..." : "Upload image"}
+            {uploading ? t("uploading") : t("uploadImage")}
           </Button>
           <input
             ref={fileInputRef}

@@ -12,6 +12,32 @@ create table if not exists public.learning_cards (
   user_id uuid references auth.users(id)
 );
 
+create table if not exists public.profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  username text not null,
+  description text,
+  photo_url text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+alter table public.profiles enable row level security;
+
+create policy "Anyone can view profiles"
+on public.profiles for select
+using (true);
+
+create policy "Users can insert own profile"
+on public.profiles for insert
+to authenticated
+with check (auth.uid() = id);
+
+create policy "Users can update own profile"
+on public.profiles for update
+to authenticated
+using (auth.uid() = id)
+with check (auth.uid() = id);
+
 alter table public.learning_cards enable row level security;
 
 create policy "Anyone can view learning cards"
@@ -56,8 +82,12 @@ create table if not exists public.learning_comments (
   card_id uuid not null references public.learning_cards(id) on delete cascade,
   author_name text not null default '訪客',
   body text not null,
+  viod boolean not null default false,
   created_at timestamptz default now()
 );
+
+alter table public.learning_comments
+add column if not exists viod boolean not null default false;
 
 alter table public.learning_comments enable row level security;
 
@@ -72,7 +102,11 @@ with check (
   and length(trim(body)) between 1 and 1000
 );
 
-create policy "Authenticated users can delete learning comments"
-on public.learning_comments for delete
+drop policy if exists "Authenticated users can delete learning comments"
+on public.learning_comments;
+
+create policy "Authenticated users can mark learning comments deleted"
+on public.learning_comments for update
 to authenticated
-using (true);
+using (true)
+with check (viod = true);
