@@ -50,3 +50,29 @@ create trigger set_learning_cards_updated_at
 before update on public.learning_cards
 for each row
 execute function public.set_learning_cards_updated_at();
+
+create table if not exists public.learning_comments (
+  id uuid primary key default gen_random_uuid(),
+  card_id uuid not null references public.learning_cards(id) on delete cascade,
+  author_name text not null default '訪客',
+  body text not null,
+  created_at timestamptz default now()
+);
+
+alter table public.learning_comments enable row level security;
+
+create policy "Anyone can view learning comments"
+on public.learning_comments for select
+using (true);
+
+create policy "Anyone can insert learning comments"
+on public.learning_comments for insert
+with check (
+  length(trim(author_name)) between 1 and 40
+  and length(trim(body)) between 1 and 1000
+);
+
+create policy "Authenticated users can delete learning comments"
+on public.learning_comments for delete
+to authenticated
+using (true);

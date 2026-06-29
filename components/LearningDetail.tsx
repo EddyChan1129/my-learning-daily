@@ -6,8 +6,14 @@ import { useEffect, useState } from "react";
 import { CardForm } from "@/components/CardForm";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { getSupabase } from "@/lib/supabase";
-import type { LearningCard, LearningCardInput } from "@/types/learning";
+import type {
+  LearningCard,
+  LearningCardInput,
+  LearningComment,
+} from "@/types/learning";
 import {
   formatLearningCardError,
   isUuid,
@@ -23,6 +29,15 @@ export function LearningDetail({ slug }: { slug: string }) {
   const [user, setUser] = useState<User | null>(null);
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState("");
+  const [comments, setComments] = useState<LearningComment[]>([]);
+  const [commentName, setCommentName] = useState(() =>
+    typeof window === "undefined"
+      ? ""
+      : (localStorage.getItem("learning_comment_name") ??
+        `訪客${Math.floor(100000 + Math.random() * 900000)}`),
+  );
+  const [commentBody, setCommentBody] = useState("");
+  const [commentMessage, setCommentMessage] = useState("");
 
   useEffect(() => {
     async function loadCard() {
@@ -40,6 +55,7 @@ export function LearningDetail({ slug }: { slug: string }) {
       }
 
       setCard(data);
+      await loadComments(data.id);
     }
 
     loadCard();
@@ -53,6 +69,24 @@ export function LearningDetail({ slug }: { slug: string }) {
 
     return () => data.subscription.unsubscribe();
   }, [slug]);
+
+  async function loadComments(cardId: string) {
+    if (!supabase) return;
+
+    const { data, error } = await supabase
+      .from("learning_comments")
+      .select("*")
+      .eq("card_id", cardId)
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      setCommentMessage(error.message);
+      return;
+    }
+
+    setComments(data ?? []);
+    setCommentMessage("");
+  }
 
   async function updateCard(value: LearningCardInput) {
     if (!supabase || !card) return;
@@ -90,16 +124,59 @@ export function LearningDetail({ slug }: { slug: string }) {
     window.location.href = "/";
   }
 
+  async function createComment() {
+    if (!supabase || !card) return;
+
+    const authorName = commentName.trim() || "訪客";
+    const body = commentBody.trim();
+    if (!body) {
+      setCommentMessage("請先輸入留言。Write a comment first.");
+      return;
+    }
+
+    localStorage.setItem("learning_comment_name", authorName);
+
+    const { error } = await supabase.from("learning_comments").insert({
+      card_id: card.id,
+      author_name: authorName,
+      body,
+    });
+
+    if (error) {
+      setCommentMessage(error.message);
+      return;
+    }
+
+    setCommentBody("");
+    await loadComments(card.id);
+  }
+
+  async function deleteComment(commentId: string) {
+    if (!supabase || !card || !confirm("刪除留言？Delete this comment?")) return;
+
+    const { error } = await supabase
+      .from("learning_comments")
+      .delete()
+      .eq("id", commentId);
+
+    if (error) {
+      setCommentMessage(error.message);
+      return;
+    }
+
+    await loadComments(card.id);
+  }
+
   const canEdit = Boolean(user && card && user.id === card.user_id);
 
   if (!supabase) {
     return (
       <main className="mx-auto w-[min(820px,calc(100%_-_32px))] py-8 sm:py-12">
         <Link className="inline-block font-bold text-neutral-600" href="/">
-          Back
+          返回 Back
         </Link>
         <p className="mt-5 text-neutral-600">
-          Add Supabase env vars to load learning cards.
+          請先加入 Supabase env vars。Add Supabase env vars to load learning cards.
         </p>
       </main>
     );
@@ -109,7 +186,7 @@ export function LearningDetail({ slug }: { slug: string }) {
     return (
       <main className="mx-auto w-[min(820px,calc(100%_-_32px))] py-8 sm:py-12">
         <Link className="inline-block font-bold text-neutral-600" href="/">
-          Back
+          返回 Back
         </Link>
         <p className="mt-5 text-neutral-600">{message || "Loading..."}</p>
       </main>
@@ -128,7 +205,7 @@ export function LearningDetail({ slug }: { slug: string }) {
   return (
     <main className="mx-auto w-[min(820px,calc(100%_-_32px))] py-8 sm:py-12">
       <Link className="mb-5 inline-block font-bold text-neutral-600" href="/">
-        Back
+        返回 Back
       </Link>
 
       {editing ? (
@@ -160,15 +237,88 @@ export function LearningDetail({ slug }: { slug: string }) {
           {canEdit ? (
             <div className="mt-6 flex flex-wrap justify-end gap-2.5">
               <Button variant="secondary" onClick={() => setEditing(true)}>
-                Edit
+                編輯 Edit
               </Button>
               <Button variant="destructive" onClick={deleteCard}>
-                Delete
+                刪除 Delete
               </Button>
             </div>
           ) : null}
         </Card>
       )}
+      <section className="mt-6 border border-neutral-950 bg-white p-4 shadow-[6px_6px_0_#1a1a1a] sm:p-5">
+        <div className="mb-4">
+          <h2 className="text-2xl font-black text-neutral-950">
+            留言 Comments
+          </h2>
+          <p className="text-sm text-neutral-600">
+            未登入都可以留言；你可以改自己的顯示名。
+            Visitors can comment and choose a display name.
+          </p>
+        </div>
+
+        <div className="grid gap-3">
+          <Input
+            value={commentName}
+            onChange={(event) => setCommentName(event.target.value)}
+            placeholder="你的名字 / 訪客123456 Your name"
+            maxLength={40}
+          />
+          <Textarea
+            className="min-h-24"
+            value={commentBody}
+            onChange={(event) => setCommentBody(event.target.value)}
+            placeholder="寫低你的想法... Leave a comment..."
+            maxLength={1000}
+          />
+          {commentMessage ? (
+            <p className="text-sm font-bold text-red-700">{commentMessage}</p>
+          ) : null}
+          <div className="flex justify-end">
+            <Button onClick={createComment}>送出留言 Post comment</Button>
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-3">
+          {comments.length === 0 ? (
+            <p className="border border-dashed border-stone-300 p-4 text-sm text-neutral-600">
+              暫時未有留言。No comments yet.
+            </p>
+          ) : (
+            comments.map((comment) => (
+              <article
+                className="border border-stone-200 bg-[#fffdf8] p-3"
+                key={comment.id}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-black text-neutral-950">
+                      {comment.author_name}
+                    </p>
+                    <time className="text-xs font-bold text-neutral-500">
+                      {comment.created_at
+                        ? dayjs(comment.created_at).format("YYYY-MM-DD HH:mm")
+                        : "-"}
+                    </time>
+                  </div>
+                  {user ? (
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={() => deleteComment(comment.id)}
+                    >
+                      刪除 Delete
+                    </Button>
+                  ) : null}
+                </div>
+                <p className="mt-3 whitespace-pre-wrap leading-relaxed text-neutral-800">
+                  {comment.body}
+                </p>
+              </article>
+            ))
+          )}
+        </div>
+      </section>
     </main>
   );
 }

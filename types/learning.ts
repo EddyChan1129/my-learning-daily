@@ -20,3 +20,11 @@ export type LearningCardInput = {
   learned_date: string;
   image_url: string | null;
 };
+
+export type LearningComment = {
+  id: string;
+  card_id: string;
+  author_name: string;
+  body: string;
+  created_at: string | null;
+};
