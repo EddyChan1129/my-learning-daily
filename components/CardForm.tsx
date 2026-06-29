@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type { LearningCardInput } from "@/types/learning";
 import { uploadLearningImage } from "@/utils/cloudinary";
@@ -72,13 +73,18 @@ export function CardForm({
       </Label>
       <Label>
         Category
-        <Input
+        <Select
           value={value.category}
           onChange={(event) =>
             setValue({ ...value, category: event.target.value })
           }
           required
-        />
+        >
+          <option value="">Select category</option>
+          <option value="IT">IT</option>
+          <option value="psycology">psycology</option>
+          <option value="others">others</option>
+        </Select>
       </Label>
       <Label>
         Date learned

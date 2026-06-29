@@ -1,9 +1,8 @@
 "use client";
 
-import { ClipboardEvent, useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { uploadLearningImage } from "@/utils/cloudinary";
-import { sanitizeContent } from "@/utils/content";
+import { Textarea } from "@/components/ui/textarea";
 
 type Props = {
   value: string;
@@ -11,105 +10,49 @@ type Props = {
 };
 
 export function ContentEditor({ value, onChange }: Props) {
-  const editorRef = useRef<HTMLDivElement>(null);
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  useEffect(() => {
-    if (editorRef.current && editorRef.current.innerHTML !== value) {
-      editorRef.current.innerHTML = value;
-    }
-  }, [value]);
+  function wrapSelection(open: string, close: string) {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
 
-  function syncValue() {
-    onChange(sanitizeContent(editorRef.current?.innerHTML ?? ""));
-  }
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selected = value.slice(start, end);
+    const nextValue = `${value.slice(0, start)}${open}${selected}${close}${value.slice(end)}`;
 
-  function wrapSelection(className?: string) {
-    const selection = window.getSelection();
-    const range = selection?.rangeCount ? selection.getRangeAt(0) : null;
-
-    if (!range || !editorRef.current?.contains(range.commonAncestorContainer)) {
-      return;
-    }
-
-    const span = document.createElement("strong");
-    if (className) span.className = className;
-    span.appendChild(range.extractContents());
-    range.insertNode(span);
-    selection?.removeAllRanges();
-    syncValue();
-  }
-
-  function insertHtml(html: string) {
-    const selection = window.getSelection();
-    const range = selection?.rangeCount ? selection.getRangeAt(0) : null;
-
-    if (!range || !editorRef.current?.contains(range.commonAncestorContainer)) {
-      editorRef.current?.insertAdjacentHTML("beforeend", html);
-      return;
-    }
-
-    const template = document.createElement("template");
-    template.innerHTML = html;
-    range.deleteContents();
-    range.insertNode(template.content);
-  }
-
-  async function pasteImage(event: ClipboardEvent<HTMLDivElement>) {
-    const file = Array.from(event.clipboardData.files).find((item) =>
-      item.type.startsWith("image/"),
-    );
-
-    if (!file) return;
-
-    event.preventDefault();
-    setUploading(true);
-    setError("");
-
-    try {
-      const imageUrl = await uploadLearningImage(file);
-      insertHtml(`<p><img class="content-image" src="${imageUrl}" alt="" /></p>`);
-      syncValue();
-    } catch (uploadError) {
-      setError(
-        uploadError instanceof Error ? uploadError.message : "Image upload failed.",
-      );
-    } finally {
-      setUploading(false);
-    }
+    onChange(nextValue);
+    requestAnimationFrame(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + open.length, end + open.length);
+    });
   }
 
   return (
     <div className="grid gap-2">
       <div className="flex flex-wrap gap-2">
-        <Button type="button" variant="secondary" onClick={() => wrapSelection()}>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => wrapSelection("<strong>", "</strong>")}
+        >
           Bold
         </Button>
         <Button
           type="button"
           variant="secondary"
-          onClick={() => wrapSelection("text-large")}
+          onClick={() => wrapSelection('<strong class="text-large">', "</strong>")}
         >
           Large
         </Button>
       </div>
-      <div
-        ref={editorRef}
-        className="min-h-56 rounded-lg border border-stone-200 bg-white px-3 py-2 text-base text-neutral-950 outline-offset-2 focus-visible:outline-2 focus-visible:outline-neutral-950 [&_.content-image]:my-4 [&_.content-image]:max-h-[420px] [&_.content-image]:w-full [&_.content-image]:rounded-lg [&_.content-image]:object-cover [&_.text-large]:text-2xl"
-        contentEditable
-        onBlur={syncValue}
-        onInput={syncValue}
-        onPaste={pasteImage}
-        role="textbox"
-        aria-label="Content"
-        suppressContentEditableWarning
+      <Textarea
+        ref={textareaRef}
+        className="min-h-56"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        required
       />
-      <p className="text-xs font-normal text-neutral-500">
-        Paste screenshot with Control+V or Command+V.
-        {uploading ? " Uploading image..." : ""}
-      </p>
-      {error ? <p className="text-xs font-bold text-red-700">{error}</p> : null}
     </div>
   );
 }

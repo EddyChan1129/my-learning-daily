@@ -2,7 +2,7 @@ export function sanitizeContent(html: string) {
   if (typeof window === "undefined") return html;
 
   const doc = new DOMParser().parseFromString(html, "text/html");
-  const allowedTags = new Set(["B", "BR", "DIV", "IMG", "P", "STRONG"]);
+  const allowedTags = new Set(["B", "BR", "DIV", "IMG", "P", "SPAN", "STRONG"]);
 
   doc.body.querySelectorAll("*").forEach((node) => {
     if (!allowedTags.has(node.tagName)) {
