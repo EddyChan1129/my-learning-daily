@@ -3,13 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { CardForm } from "@/components/CardForm";
-import {
-  emptyCard,
-  LearningCard,
-  LearningCardInput,
-  slugify,
-} from "@/lib/learningCards";
+import { Button } from "@/components/ui/button";
 import { getSupabase } from "@/lib/supabase";
+import type { LearningCard, LearningCardInput } from "@/types/learning";
+import { emptyCard, formatLearningCardError, slugify } from "@/utils/learning";
 import type { User } from "@supabase/supabase-js";
 
 const supabase = getSupabase();
@@ -17,8 +14,6 @@ const supabase = getSupabase();
 export function HomeClient() {
   const [cards, setCards] = useState<LearningCard[]>([]);
   const [user, setUser] = useState<User | null>(null);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [showForm, setShowForm] = useState(false);
 
@@ -44,29 +39,11 @@ export function HomeClient() {
       .order("learned_date", { ascending: false });
 
     if (error) {
-      setMessage(error.message);
+      setMessage(formatLearningCardError(error.message));
       return;
     }
 
     setCards(data ?? []);
-  }
-
-  async function signIn() {
-    if (!supabase) return;
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    setMessage(error?.message ?? "");
-  }
-
-  async function signOut() {
-    if (!supabase) return;
-
-    await supabase.auth.signOut();
-    setShowForm(false);
   }
 
   async function createCard(value: LearningCardInput) {
@@ -85,56 +62,29 @@ export function HomeClient() {
   }
 
   return (
-    <main className="page">
-      <section className="hero">
+    <main className="mx-auto w-[min(1120px,calc(100%_-_32px))] py-8 sm:py-12">
+      <section className="pb-8 pt-10">
         <div>
-          <p className="eyebrow">Eddy 每日學習</p>
-          <h1>每天留低一張學習卡。</h1>
-          <p className="intro">
+          <p className="mb-2 text-sm font-bold uppercase text-neutral-600">
+            Eddy 每日學習
+          </p>
+          <h1 className="mb-3 max-w-3xl text-[clamp(34px,6vw,72px)] font-black leading-none tracking-normal text-neutral-950">
+            每天留低一張學習卡。
+          </h1>
+          <p className="max-w-2xl text-xl text-neutral-600">
             我係 Eddy，呢度記錄每日學到的前端、產品、工具同生活知識。
             每張卡都係一個小重點，方便之後重溫。
           </p>
         </div>
-
-        <div className="authBox">
-          {!supabase ? (
-            <p className="muted">Add Supabase env vars to enable login.</p>
-          ) : user ? (
-            <>
-              <p className="muted">{user.email}</p>
-              <button className="button secondary" onClick={signOut}>
-                Sign out
-              </button>
-            </>
-          ) : (
-            <>
-              <input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-              />
-              <input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-              />
-              <button className="button" onClick={signIn}>
-                Sign in
-              </button>
-            </>
-          )}
-        </div>
       </section>
 
-      {message ? <p className="notice">{message}</p> : null}
+      {message ? <p className="mb-5 text-neutral-600">{message}</p> : null}
 
       {user ? (
-        <section className="createPanel">
-          <button className="button" onClick={() => setShowForm(!showForm)}>
+        <section className="mb-7">
+          <Button onClick={() => setShowForm(!showForm)}>
             {showForm ? "Close form" : "New learning card"}
-          </button>
+          </Button>
           {showForm ? (
             <CardForm
               initialValue={emptyCard}
@@ -145,33 +95,46 @@ export function HomeClient() {
         </section>
       ) : null}
 
-      <section className="grid" aria-label="Learning cards">
+      <section
+        className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+        aria-label="Learning cards"
+      >
         {cards.map((card) => (
           <Link
-            className="card"
+            className="overflow-hidden rounded-lg border border-stone-200 bg-white shadow-[0_10px_30px_rgba(26,26,26,0.06)] transition hover:-translate-y-1 hover:shadow-[0_14px_40px_rgba(26,26,26,0.1)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950"
             href={`/learning/${card.slug ?? card.id}`}
             key={card.id}
           >
-            <div className="thumb">
+            <div className="grid min-h-44 place-items-center bg-stone-100 text-4xl font-black text-neutral-950">
               {card.image_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={card.image_url} alt="" />
+                <img
+                  className="h-56 w-full object-cover"
+                  src={card.image_url}
+                  alt=""
+                />
               ) : (
                 <span>{card.category.slice(0, 2).toUpperCase()}</span>
               )}
             </div>
-            <div className="cardBody">
-              <p className="tag">{card.category}</p>
-              <h2>{card.title}</h2>
-              <p>{card.summary}</p>
-              <time>{card.learned_date}</time>
+            <div className="p-4">
+              <p className="mb-2 text-sm font-bold uppercase text-neutral-600">
+                {card.category}
+              </p>
+              <h2 className="mb-2 text-2xl font-black leading-tight text-neutral-950">
+                {card.title}
+              </h2>
+              <p className="text-neutral-600">{card.summary}</p>
+              <time className="mt-4 block text-sm font-bold text-neutral-600">
+                {card.learned_date}
+              </time>
             </div>
           </Link>
         ))}
       </section>
 
       {cards.length === 0 ? (
-        <p className="empty">No learning cards yet.</p>
+        <p className="mt-6 text-neutral-600">No learning cards yet.</p>
       ) : null}
     </main>
   );

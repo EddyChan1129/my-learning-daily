@@ -11,16 +11,22 @@
   "description": "Eddy daily learning app",
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",
+    "clsx": "^2.1.1",
+    "dayjs": "^1.11.21",
     "next": "^16.2.9",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react-dom": "^19.2.7",
+    "tailwind-merge": "^3.6.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.1",
     "@types/node": "^26.0.1",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "eslint": "^9.39.4",
     "eslint-config-next": "^16.2.9",
+    "tailwindcss": "^4.3.1",
     "typescript": "^6.0.3"
   }
 }

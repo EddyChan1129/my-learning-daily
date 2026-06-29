@@ -1,7 +1,15 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { LearningCardInput, validateCard } from "@/lib/learningCards";
+import { ContentEditor } from "@/components/ContentEditor";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import type { LearningCardInput } from "@/types/learning";
+import { uploadLearningImage } from "@/utils/cloudinary";
+import { validateCard } from "@/utils/learning";
 
 type Props = {
   initialValue: LearningCardInput;
@@ -17,6 +25,7 @@ export function CardForm({
   onCancel,
 }: Props) {
   const [value, setValue] = useState(initialValue);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -32,9 +41,13 @@ export function CardForm({
     setError("");
 
     try {
+      const imageUrl = imageFile
+        ? await uploadLearningImage(imageFile)
+        : value.image_url;
+
       await onSubmit({
         ...value,
-        image_url: value.image_url?.trim() || null,
+        image_url: imageUrl,
       });
     } catch (submitError) {
       setError(
@@ -46,29 +59,30 @@ export function CardForm({
   }
 
   return (
-    <form className="form" onSubmit={handleSubmit}>
-      {error ? <p className="formError">{error}</p> : null}
-      <label>
+    <Card className="mt-4 p-4">
+      <form className="grid gap-4" onSubmit={handleSubmit}>
+      {error ? <p className="font-bold text-red-700">{error}</p> : null}
+      <Label>
         Title
-        <input
+        <Input
           value={value.title}
           onChange={(event) => setValue({ ...value, title: event.target.value })}
           required
         />
-      </label>
-      <label>
+      </Label>
+      <Label>
         Category
-        <input
+        <Input
           value={value.category}
           onChange={(event) =>
             setValue({ ...value, category: event.target.value })
           }
           required
         />
-      </label>
-      <label>
+      </Label>
+      <Label>
         Date learned
-        <input
+        <Input
           type="date"
           value={value.learned_date}
           onChange={(event) =>
@@ -76,19 +90,29 @@ export function CardForm({
           }
           required
         />
-      </label>
-      <label>
-        Image URL
-        <input
-          value={value.image_url ?? ""}
-          onChange={(event) =>
-            setValue({ ...value, image_url: event.target.value })
-          }
+      </Label>
+      <Label>
+        Image
+        <Input
+          accept="image/*"
+          type="file"
+          onChange={(event) => setImageFile(event.target.files?.[0] ?? null)}
         />
-      </label>
-      <label>
+        <span className="text-xs font-normal text-neutral-500">
+          Uploads to Cloudinary folder /eddy-learning.
+        </span>
+      </Label>
+      {value.image_url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          alt=""
+          className="h-40 w-full rounded-lg object-cover"
+          src={value.image_url}
+        />
+      ) : null}
+      <Label>
         Summary
-        <textarea
+        <Textarea
           rows={3}
           value={value.summary}
           onChange={(event) =>
@@ -96,28 +120,25 @@ export function CardForm({
           }
           required
         />
-      </label>
-      <label>
+      </Label>
+      <Label>
         Content
-        <textarea
-          rows={8}
+        <ContentEditor
           value={value.content}
-          onChange={(event) =>
-            setValue({ ...value, content: event.target.value })
-          }
-          required
+          onChange={(content) => setValue({ ...value, content })}
         />
-      </label>
-      <div className="formActions">
+      </Label>
+      <div className="flex flex-wrap justify-end gap-2.5">
         {onCancel ? (
-          <button type="button" className="button secondary" onClick={onCancel}>
+          <Button type="button" variant="secondary" onClick={onCancel}>
             Cancel
-          </button>
+          </Button>
         ) : null}
-        <button className="button" disabled={saving} type="submit">
+        <Button disabled={saving} type="submit">
           {saving ? "Saving..." : submitLabel}
-        </button>
+        </Button>
       </div>
-    </form>
+      </form>
+    </Card>
   );
 }

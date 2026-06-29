@@ -1,10 +1,19 @@
 "use client";
 
 import Link from "next/link";
+import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { CardForm } from "@/components/CardForm";
-import { LearningCard, LearningCardInput, slugify } from "@/lib/learningCards";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { getSupabase } from "@/lib/supabase";
+import type { LearningCard, LearningCardInput } from "@/types/learning";
+import {
+  formatLearningCardError,
+  isUuid,
+  slugify,
+} from "@/utils/learning";
+import { sanitizeContent } from "@/utils/content";
 import type { User } from "@supabase/supabase-js";
 
 const supabase = getSupabase();
@@ -22,11 +31,11 @@ export function LearningDetail({ slug }: { slug: string }) {
       const { data, error } = await supabase
         .from("learning_cards")
         .select("*")
-        .or(`slug.eq.${slug},id.eq.${slug}`)
+        .eq(isUuid(slug) ? "id" : "slug", slug)
         .single();
 
       if (error) {
-        setMessage(error.message);
+        setMessage(formatLearningCardError(error.message));
         return;
       }
 
@@ -85,22 +94,24 @@ export function LearningDetail({ slug }: { slug: string }) {
 
   if (!supabase) {
     return (
-      <main className="page detailPage">
-        <Link className="backLink" href="/">
+      <main className="mx-auto w-[min(820px,calc(100%_-_32px))] py-8 sm:py-12">
+        <Link className="inline-block font-bold text-neutral-600" href="/">
           Back
         </Link>
-        <p className="notice">Add Supabase env vars to load learning cards.</p>
+        <p className="mt-5 text-neutral-600">
+          Add Supabase env vars to load learning cards.
+        </p>
       </main>
     );
   }
 
   if (!card) {
     return (
-      <main className="page detailPage">
-        <Link className="backLink" href="/">
+      <main className="mx-auto w-[min(820px,calc(100%_-_32px))] py-8 sm:py-12">
+        <Link className="inline-block font-bold text-neutral-600" href="/">
           Back
         </Link>
-        <p className="notice">{message || "Loading..."}</p>
+        <p className="mt-5 text-neutral-600">{message || "Loading..."}</p>
       </main>
     );
   }
@@ -111,12 +122,12 @@ export function LearningDetail({ slug }: { slug: string }) {
     summary: card.summary,
     content: card.content,
     learned_date: card.learned_date,
-    image_url: card.image_url ?? "",
+    image_url: card.image_url,
   };
 
   return (
-    <main className="page detailPage">
-      <Link className="backLink" href="/">
+    <main className="mx-auto w-[min(820px,calc(100%_-_32px))] py-8 sm:py-12">
+      <Link className="mb-5 inline-block font-bold text-neutral-600" href="/">
         Back
       </Link>
 
@@ -128,35 +139,44 @@ export function LearningDetail({ slug }: { slug: string }) {
           onCancel={() => setEditing(false)}
         />
       ) : (
-        <article className="detail">
-          <p className="tag">{card.category}</p>
-          <h1>{card.title}</h1>
-          <time>{card.learned_date}</time>
-          <p className="summary">{card.summary}</p>
+        <Card className="p-5 sm:p-7">
+          <p className="mb-2 text-sm font-bold uppercase text-neutral-600">
+            {card.category}
+          </p>
+          <h1 className="mb-3 text-[clamp(36px,7vw,76px)] font-black leading-none tracking-normal text-neutral-950">
+            {card.title}
+          </h1>
+          <time className="text-sm font-bold text-neutral-600">
+            {dayjs(card.learned_date).format("YYYY-MM-DD")}
+          </time>
+          <p className="my-5 text-xl text-neutral-600">{card.summary}</p>
           {card.image_url ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img className="detailImage" src={card.image_url} alt="" />
+            <img
+              className="my-5 max-h-[420px] w-full rounded-lg object-cover"
+              src={card.image_url}
+              alt=""
+            />
           ) : null}
-          <div className="content">
-            {card.content.split("\n").map((line, index) => (
-              <p key={index}>{line}</p>
-            ))}
-          </div>
-          <p className="meta">
-            Created: {card.created_at ?? "-"} · Updated:{" "}
-            {card.updated_at ?? "-"}
+          <div
+            className="mt-6 text-lg text-neutral-950 [&_.content-image]:my-4 [&_.content-image]:max-h-[420px] [&_.content-image]:w-full [&_.content-image]:rounded-lg [&_.content-image]:object-cover [&_.text-large]:text-2xl"
+            dangerouslySetInnerHTML={{ __html: sanitizeContent(card.content) }}
+          />
+          <p className="mt-7 text-sm text-neutral-600">
+            Created: {card.created_at ? dayjs(card.created_at).format("YYYY-MM-DD") : "-"} · Updated:{" "}
+            {card.updated_at ? dayjs(card.updated_at).format("YYYY-MM-DD") : "-"}
           </p>
           {canEdit ? (
-            <div className="formActions">
-              <button className="button secondary" onClick={() => setEditing(true)}>
+            <div className="mt-6 flex flex-wrap justify-end gap-2.5">
+              <Button variant="secondary" onClick={() => setEditing(true)}>
                 Edit
-              </button>
-              <button className="button danger" onClick={deleteCard}>
+              </Button>
+              <Button variant="destructive" onClick={deleteCard}>
                 Delete
-              </button>
+              </Button>
             </div>
           ) : null}
-        </article>
+        </Card>
       )}
     </main>
   );
