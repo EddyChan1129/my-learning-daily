@@ -32,3 +32,12 @@ export function contentText(html: string) {
 
   return new DOMParser().parseFromString(html, "text/html").body.textContent ?? "";
 }
+
+export function contentHasImage(html: string) {
+  return /<img\b/i.test(html);
+}
+
+export function contentSummary(html: string) {
+  const text = contentText(html).replace(/\s+/g, " ").trim();
+  return text.slice(0, 140) || "Image learning note";
+}

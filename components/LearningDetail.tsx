@@ -149,7 +149,6 @@ export function LearningDetail({ slug }: { slug: string }) {
           <time className="text-sm font-bold text-neutral-600">
             {dayjs(card.learned_date).format("YYYY-MM-DD")}
           </time>
-          <p className="my-5 text-xl text-neutral-600">{card.summary}</p>
           {card.image_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img

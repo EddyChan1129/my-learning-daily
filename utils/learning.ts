@@ -1,12 +1,12 @@
 import { z } from "zod";
 import type { LearningCardInput } from "@/types/learning";
-import { contentText } from "@/utils/content";
+import { contentHasImage, contentText } from "@/utils/content";
 
 export const learningCardSchema = z.object({
   title: z.string().trim().min(1, "Title is required."),
   category: z.string().trim().min(1, "Category is required."),
   learned_date: z.string().min(1, "Date learned is required."),
-  summary: z.string().trim().min(1, "Summary is required."),
+  summary: z.string(),
   content: z.string().trim().min(1, "Content is required."),
   image_url: z.string().nullable(),
 });
@@ -37,6 +37,9 @@ export function validateCard(input: LearningCardInput) {
         .string()
         .refine((value) => contentText(value).trim().length > 0, {
           message: "Content is required.",
+        })
+        .refine((value) => contentHasImage(value) || Boolean(input.image_url), {
+          message: "At least one image is required.",
         }),
     })
     .safeParse(input);

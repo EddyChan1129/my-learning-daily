@@ -7,9 +7,8 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import type { LearningCardInput } from "@/types/learning";
-import { uploadLearningImage } from "@/utils/cloudinary";
+import { contentSummary } from "@/utils/content";
 import { validateCard } from "@/utils/learning";
 
 type Props = {
@@ -26,7 +25,6 @@ export function CardForm({
   onCancel,
 }: Props) {
   const [value, setValue] = useState(initialValue);
-  const [imageFile, setImageFile] = useState<File | null>(null);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -42,13 +40,9 @@ export function CardForm({
     setError("");
 
     try {
-      const imageUrl = imageFile
-        ? await uploadLearningImage(imageFile)
-        : value.image_url;
-
       await onSubmit({
         ...value,
-        image_url: imageUrl,
+        summary: contentSummary(value.content),
       });
     } catch (submitError) {
       setError(
@@ -98,40 +92,18 @@ export function CardForm({
         />
       </Label>
       <Label>
-        Image
-        <Input
-          accept="image/*"
-          type="file"
-          onChange={(event) => setImageFile(event.target.files?.[0] ?? null)}
-        />
-        <span className="text-xs font-normal text-neutral-500">
-          Uploads to Cloudinary folder /eddy-learning.
-        </span>
-      </Label>
-      {value.image_url ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          alt=""
-          className="h-40 w-full rounded-lg object-cover"
-          src={value.image_url}
-        />
-      ) : null}
-      <Label>
-        Summary
-        <Textarea
-          rows={3}
-          value={value.summary}
-          onChange={(event) =>
-            setValue({ ...value, summary: event.target.value })
-          }
-          required
-        />
-      </Label>
-      <Label>
         Content
         <ContentEditor
           value={value.content}
-          onChange={(content) => setValue({ ...value, content })}
+          onChange={(content) =>
+            setValue((currentValue) => ({ ...currentValue, content }))
+          }
+          onFirstImage={(imageUrl) =>
+            setValue((currentValue) => ({
+              ...currentValue,
+              image_url: currentValue.image_url ?? imageUrl,
+            }))
+          }
         />
       </Label>
       <div className="flex flex-wrap justify-end gap-2.5">
