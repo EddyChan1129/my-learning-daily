@@ -149,16 +149,8 @@ export function LearningDetail({ slug }: { slug: string }) {
           <time className="text-sm font-bold text-neutral-600">
             {dayjs(card.learned_date).format("YYYY-MM-DD")}
           </time>
-          {card.image_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              className="my-5 max-h-[420px] w-full rounded-lg object-cover"
-              src={card.image_url}
-              alt=""
-            />
-          ) : null}
           <div
-            className="mt-6 text-lg text-neutral-950 [&_.content-image]:my-4 [&_.content-image]:max-h-[420px] [&_.content-image]:w-full [&_.content-image]:rounded-lg [&_.content-image]:object-cover [&_.text-large]:text-2xl"
+            className="mt-6 text-lg text-neutral-950 [&_.content-image]:my-4 [&_.content-image]:max-h-80 [&_.content-image]:w-full [&_.content-image]:max-w-md [&_.content-image]:rounded-lg [&_.content-image]:object-contain [&_.text-large]:text-2xl"
             dangerouslySetInnerHTML={{ __html: sanitizeContent(card.content) }}
           />
           <p className="mt-7 text-sm text-neutral-600">

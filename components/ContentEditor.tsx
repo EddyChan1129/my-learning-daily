@@ -1,6 +1,6 @@
 "use client";
 
-import { ClipboardEvent, useEffect, useRef, useState } from "react";
+import { ChangeEvent, ClipboardEvent, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { uploadLearningImage } from "@/utils/cloudinary";
 import { sanitizeContent } from "@/utils/content";
@@ -13,6 +13,7 @@ type Props = {
 
 export function ContentEditor({ value, onChange, onFirstImage }: Props) {
   const editorRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
 
@@ -27,6 +28,7 @@ export function ContentEditor({ value, onChange, onFirstImage }: Props) {
   }
 
   function runCommand(command: "bold" | "large") {
+    editorRef.current?.focus();
     document.execCommand("styleWithCSS", false, "false");
 
     if (command === "bold") {
@@ -57,20 +59,17 @@ export function ContentEditor({ value, onChange, onFirstImage }: Props) {
     range.insertNode(document.createRange().createContextualFragment(html));
   }
 
-  async function pasteImage(event: ClipboardEvent<HTMLDivElement>) {
-    const file = Array.from(event.clipboardData.files).find((item) =>
-      item.type.startsWith("image/"),
-    );
-
+  async function insertImage(file: File) {
     if (!file) return;
 
-    event.preventDefault();
     setUploading(true);
     setError("");
 
     try {
       const imageUrl = await uploadLearningImage(file);
-      insertHtml(`<p><img class="content-image" src="${imageUrl}" alt="" /></p><p><br></p>`);
+      insertHtml(
+        `<p><img class="content-image" src="${imageUrl}" alt="" /></p><p><br></p>`,
+      );
       onFirstImage(imageUrl);
       syncValue();
     } catch (uploadError) {
@@ -82,29 +81,77 @@ export function ContentEditor({ value, onChange, onFirstImage }: Props) {
     }
   }
 
+  async function pasteImage(event: ClipboardEvent<HTMLDivElement>) {
+    const file = Array.from(event.clipboardData.files).find((item) =>
+      item.type.startsWith("image/"),
+    );
+
+    if (!file) return;
+
+    event.preventDefault();
+    await insertImage(file);
+  }
+
+  async function uploadImage(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    await insertImage(file);
+    event.target.value = "";
+  }
+
   return (
     <div className="grid gap-2">
-      <div className="flex flex-wrap gap-2">
-        <Button type="button" variant="secondary" onClick={() => runCommand("bold")}>
-          Bold
-        </Button>
-        <Button type="button" variant="secondary" onClick={() => runCommand("large")}>
-          Large
-        </Button>
+      <div className="overflow-hidden rounded-lg border border-stone-200 bg-white focus-within:outline-2 focus-within:outline-neutral-950">
+        <div className="flex flex-wrap gap-2 border-b border-stone-200 bg-stone-50 p-2">
+          <Button
+            type="button"
+            variant="secondary"
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => runCommand("bold")}
+          >
+            Bold
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => runCommand("large")}
+          >
+            Large
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={uploading}
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {uploading ? "Uploading..." : "Upload image"}
+          </Button>
+          <input
+            ref={fileInputRef}
+            accept="image/*"
+            className="hidden"
+            type="file"
+            onChange={uploadImage}
+          />
+        </div>
+        <div
+          ref={editorRef}
+          className="min-h-72 cursor-text px-4 py-4 text-base text-neutral-950 outline-none [&_.content-image]:my-4 [&_.content-image]:max-h-80 [&_.content-image]:w-full [&_.content-image]:max-w-md [&_.content-image]:rounded-lg [&_.content-image]:object-contain [&_.text-large]:text-2xl"
+          contentEditable
+          tabIndex={0}
+          onBlur={syncValue}
+          onInput={syncValue}
+          onPaste={pasteImage}
+          role="textbox"
+          aria-label="Content"
+          suppressContentEditableWarning
+        />
       </div>
-      <div
-        ref={editorRef}
-        className="min-h-56 rounded-lg border border-stone-200 bg-white px-3 py-2 text-base text-neutral-950 outline-offset-2 focus-visible:outline-2 focus-visible:outline-neutral-950 [&_.content-image]:my-4 [&_.content-image]:max-h-[420px] [&_.content-image]:w-full [&_.content-image]:rounded-lg [&_.content-image]:object-cover [&_.text-large]:text-2xl"
-        contentEditable
-        onBlur={syncValue}
-        onInput={syncValue}
-        onPaste={pasteImage}
-        role="textbox"
-        aria-label="Content"
-        suppressContentEditableWarning
-      />
       <p className="text-xs font-normal text-neutral-500">
-        Paste image with Command+V, then type the description below it.
+        Click the content area to type. Paste image with Command+V, or use Upload image.
         {uploading ? " Uploading image..." : ""}
       </p>
       {error ? <p className="text-xs font-bold text-red-700">{error}</p> : null}

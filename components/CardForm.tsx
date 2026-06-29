@@ -91,8 +91,8 @@ export function CardForm({
           required
         />
       </Label>
-      <Label>
-        Content
+      <div className="grid gap-1.5">
+        <span className="text-sm font-bold text-neutral-600">Content</span>
         <ContentEditor
           value={value.content}
           onChange={(content) =>
@@ -105,7 +105,7 @@ export function CardForm({
             }))
           }
         />
-      </Label>
+      </div>
       <div className="flex flex-wrap justify-end gap-2.5">
         {onCancel ? (
           <Button type="button" variant="secondary" onClick={onCancel}>
