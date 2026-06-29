@@ -105,16 +105,16 @@ export function HomeClient() {
     .size;
 
   return (
-    <main className="mx-auto w-[min(1160px,calc(100%_-_28px))] pb-16 pt-24 sm:w-[min(1160px,calc(100%_-_40px))] sm:pt-28">
+    <main className="relative mx-auto w-[min(1160px,calc(100%_-_28px))] border-x border-stone-300 px-4 pb-16 pt-24 shadow-[inset_1px_0_0_rgba(255,255,255,0.75),inset_-1px_0_0_rgba(255,255,255,0.75)] sm:w-[min(1160px,calc(100%_-_40px))] sm:px-8 sm:pt-28">
       <section className="grid gap-6 pb-8 sm:pb-12 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end">
-        <div className="border-l-4 border-neutral-950 pl-4 sm:pl-6">
+        <div className="border-l border-neutral-950 pl-4 sm:pl-6">
           <p className="mb-4 text-sm font-black text-emerald-800">
-            Eddy 每日學習
+            元浩讀書生活
           </p>
           <h1 className="max-w-3xl text-[clamp(40px,13vw,92px)] font-black leading-[0.88] tracking-normal text-neutral-950">
             {t("dailyWall")}
             <span className="mt-2 block text-[0.38em] leading-none text-neutral-500">
-              Eddy Daily
+              Study Life
             </span>
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-neutral-700 sm:text-xl">
@@ -122,14 +122,14 @@ export function HomeClient() {
           </p>
         </div>
 
-        <div className="grid grid-cols-3 border-y border-neutral-950 bg-white text-neutral-950 shadow-[8px_8px_0_#1a1a1a] lg:grid-cols-1">
-          <div className="border-r border-neutral-950 p-3 lg:border-b lg:border-r-0">
+        <div className="grid grid-cols-3 border border-stone-300 bg-white text-neutral-950 shadow-[6px_6px_0_rgba(26,26,26,0.88)] lg:grid-cols-1">
+          <div className="border-r border-stone-300 p-3 lg:border-b lg:border-r-0">
             <p className="text-xs font-black uppercase text-neutral-500">
               {t("cards")}
             </p>
             <p className="mt-1 text-3xl font-black">{cards.length}</p>
           </div>
-          <div className="border-r border-neutral-950 p-3 lg:border-b lg:border-r-0">
+          <div className="border-r border-stone-300 p-3 lg:border-b lg:border-r-0">
             <p className="text-xs font-black uppercase text-neutral-500">
               {t("people")}
             </p>
@@ -147,7 +147,7 @@ export function HomeClient() {
       {message ? <ErrorState message={message} onRetry={loadCards} /> : null}
 
       {user ? (
-        <section className="mb-8 border border-neutral-950 bg-[#fffdf8] p-4 shadow-[6px_6px_0_#1a1a1a]">
+        <section className="mb-8 border border-stone-300 bg-[#fffdf8] p-4 shadow-[6px_6px_0_rgba(26,26,26,0.88)]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="font-black text-neutral-950">{t("addCard")}</p>

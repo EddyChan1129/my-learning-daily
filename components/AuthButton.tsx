@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { LanguageSelect } from "@/components/LanguageSelect";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -98,8 +97,7 @@ export function AuthButton() {
 
   return (
     <div className="fixed right-3 top-3 z-10 grid justify-items-end gap-2 sm:right-4 sm:top-4">
-      <div className="flex max-w-[calc(100vw_-_24px)] items-center gap-2 rounded-full border border-stone-200 bg-white/95 p-1.5 shadow-[0_10px_30px_rgba(26,26,26,0.08)] backdrop-blur">
-        <LanguageSelect />
+      <div className="flex max-w-[calc(100vw_-_128px)] items-center gap-2 rounded-full border border-stone-200 bg-white/95 p-1.5 shadow-[0_10px_30px_rgba(26,26,26,0.08)] backdrop-blur sm:max-w-[calc(100vw_-_220px)]">
         {user ? (
           <>
             <button
