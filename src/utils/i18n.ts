@@ -28,7 +28,7 @@ export const resources = {
             emoji: "表情",
             footer: "讀書、生活、每日留低一點進步。",
             faq: "常見問題",
-            findTutor: "Find tutor",
+            findTutor: "尋找導師",
             heroBody: "記錄每日讀書、生活觀察。",
             home: "首頁",
             language: "語言",
