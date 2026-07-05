@@ -13,6 +13,33 @@ type Props = {
   onFirstImage: (imageUrl: string) => void;
 };
 
+const EMOJIS = [
+  "😀",
+  "😂",
+  "😍",
+  "😎",
+  "😭",
+  "😡",
+  "😱",
+  "😴",
+  "🤔",
+  "🙄",
+  "😏",
+  "🥲",
+  "👍",
+  "👎",
+  "👏",
+  "🙏",
+  "💪",
+  "🔥",
+  "✨",
+  "💯",
+  "❤️",
+  "💀",
+  "🤡",
+  "🐶",
+];
+
 function escapeHtml(value: string) {
   return value
     .replaceAll("&", "&amp;")
@@ -31,6 +58,7 @@ export function ContentEditor({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+  const [showEmojis, setShowEmojis] = useState(false);
 
   useEffect(() => {
     if (editorRef.current && document.activeElement !== editorRef.current) {
@@ -83,6 +111,12 @@ export function ContentEditor({
     insertHtml(
       `<pre><code class="language-tsx">${escapeHtml(code)}</code></pre><p><br></p>`,
     );
+    syncValue();
+  }
+
+  function insertEmoji(emoji: string) {
+    editorRef.current?.focus();
+    insertHtml(emoji);
     syncValue();
   }
 
@@ -158,6 +192,16 @@ export function ContentEditor({
           <Button
             type="button"
             variant="secondary"
+            aria-expanded={showEmojis}
+            aria-label={t("emoji")}
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => setShowEmojis((currentValue) => !currentValue)}
+          >
+            ☺
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
             disabled={uploading}
             onMouseDown={(event) => event.preventDefault()}
             onClick={() => fileInputRef.current?.click()}
@@ -172,6 +216,21 @@ export function ContentEditor({
             onChange={uploadImage}
           />
         </div>
+        {showEmojis ? (
+          <div className="grid grid-cols-8 gap-1 border-b border-stone-200 bg-[#26373b] p-2 sm:grid-cols-12">
+            {EMOJIS.map((emoji) => (
+              <button
+                key={emoji}
+                type="button"
+                className="flex aspect-square items-center justify-center rounded-md text-xl transition hover:bg-white/15 focus-visible:outline-2 focus-visible:outline-white"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => insertEmoji(emoji)}
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        ) : null}
         <div
           ref={editorRef}
           className="learning-content min-h-72 cursor-text px-4 py-4 text-base text-neutral-950 outline-none [&_.text-large]:text-2xl"
