@@ -16,17 +16,10 @@ import type {
   LearningComment,
   Profile,
 } from "@/types/learning";
-import {
-  cloudinaryPublicIdFromUrl,
-  cloudinaryPublicIdsFromContent,
-  cloudinaryLearningFolder,
-  cloudinaryLearningFolderFromUrl,
-  deleteCloudinaryAssets,
-} from "@/utils/cloudinary";
+import { cloudinaryLearningFolder } from "@/utils/cloudinary";
 import {
   formatLearningCardError,
   isUuid,
-  slugify,
 } from "@/utils/learning";
 import { sanitizeContent } from "@/utils/content";
 import type { User } from "@supabase/supabase-js";
@@ -143,57 +136,30 @@ export function LearningDetail({ slug }: { slug: string }) {
   async function updateCard(value: LearningCardInput) {
     if (!supabase || !card) return;
 
-    const { data, error } = await supabase
-      .from("learning_cards")
-      .update({
-        ...value,
-        slug: slugify(value.title),
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", card.id)
-      .select()
-      .single();
+    const response = await fetch(`/api/learning-cards/${card.id}`, {
+      body: JSON.stringify(value),
+      headers: await authHeaders(),
+      method: "PATCH",
+    });
+    const data = await response.json();
 
-    if (error) throw error;
+    if (!response.ok) throw new Error(data.error ?? "Save failed.");
 
-    setCard(data);
+    setCard(data.card);
     setEditing(false);
   }
 
   async function deleteCard() {
     if (!supabase || !card || !confirm("Delete this learning card?")) return;
 
-    try {
-      const folders = Array.from(new Set(
-        [
-          cloudinaryLearningFolder(ownerName(user, profile), card.id),
-          cloudinaryLearningFolderFromUrl(card.image_url, card.id),
-        ].filter((folder): folder is string => Boolean(folder)),
-      ));
-      const publicIds = Array.from(new Set(
-        [
-          cloudinaryPublicIdFromUrl(card.image_url),
-          ...cloudinaryPublicIdsFromContent(card.content),
-        ].filter((publicId): publicId is string => Boolean(publicId)),
-      ));
+    const response = await fetch(`/api/learning-cards/${card.id}`, {
+      headers: await authHeaders(),
+      method: "DELETE",
+    });
+    const data = await response.json();
 
-      await deleteCloudinaryAssets({ folders, publicIds });
-    } catch (deleteError) {
-      setMessage(
-        deleteError instanceof Error
-          ? deleteError.message
-          : "Cloudinary folder delete failed.",
-      );
-      return;
-    }
-
-    const { error } = await supabase
-      .from("learning_cards")
-      .delete()
-      .eq("id", card.id);
-
-    if (error) {
-      setMessage(error.message);
+    if (!response.ok) {
+      setMessage(data.error ?? "Delete failed.");
       return;
     }
 
@@ -404,4 +370,15 @@ export function LearningDetail({ slug }: { slug: string }) {
 
 function ownerName(user: User | null, profile: Profile | null) {
   return profile?.username ?? user?.email?.split("@")[0] ?? "user";
+}
+
+async function authHeaders() {
+  const { data } = await supabase!.auth.getSession();
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+
+  if (data.session?.access_token) {
+    headers.Authorization = `Bearer ${data.session.access_token}`;
+  }
+
+  return headers;
 }
