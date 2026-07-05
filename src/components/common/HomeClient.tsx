@@ -178,10 +178,8 @@ export function HomeClient({ scope = "all" }: { scope?: HomeScope }) {
   const contributorCount = new Set(cards.map((card) => card.user_id ?? "guest"))
     .size;
   const ownerName = currentProfile?.username ?? user?.email?.split("@")[0];
-  const wallTitle =
-    isMyLearning && ownerName ? `${ownerName}讀書生活` : t("dailyWall");
-  const wallSubtitle =
-    isMyLearning && ownerName ? `${ownerName} Study Life` : "Study Life";
+  const wallEyebrow =
+    isMyLearning && ownerName ? `${ownerName} · ${t("myLearning")}` : t("dailyPrompt");
   const categoryPlaylists = buildCategoryPlaylists(cards);
   const subFieldPlaylists = selectedCategory
     ? buildSubFieldPlaylists(
@@ -202,12 +200,12 @@ export function HomeClient({ scope = "all" }: { scope?: HomeScope }) {
       <section className="grid gap-6 pb-8 sm:pb-12 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end">
         <div className="border-l border-neutral-950 pl-4 sm:pl-6">
           <p className="mb-4 text-sm font-black text-emerald-800">
-            {wallTitle}
+            {wallEyebrow}
           </p>
           <h1 className="max-w-3xl text-[clamp(40px,13vw,92px)] font-black leading-[0.88] tracking-normal text-neutral-950">
-            {wallTitle}
+            {t("dailyWall")}
             <span className="mt-2 block text-[0.38em] leading-none text-neutral-500">
-              {wallSubtitle}
+              {t("dailyTagline")}
             </span>
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-neutral-700 sm:text-xl">

@@ -10,7 +10,7 @@ import { Select } from "@/components/ui/select";
 import { categoryImageForId } from "@/features/category/constants";
 import type { LearningCategory } from "@/features/category/types";
 import type { LearningCardInput } from "@/types/learning";
-import { contentSummary, firstContentImageUrl } from "@/utils/content";
+import { contentSummary } from "@/utils/content";
 import { cloudinaryPublicIdsFromContent } from "@/utils/cloudinary";
 import { validateCard } from "@/utils/learning";
 
@@ -75,7 +75,7 @@ export function CardForm({
         categoryImageForId("other");
       const nextValue = {
         ...value,
-        image_url: firstContentImageUrl(value.content) ?? fallbackImageUrl,
+        image_url: fallbackImageUrl,
         summary: contentSummary(value.content),
       };
 

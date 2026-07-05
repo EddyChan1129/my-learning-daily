@@ -7,7 +7,7 @@ export function Footer() {
 
   return (
     <footer className="mx-auto mt-10 w-[min(1160px,calc(100%-28px))] border-t border-stone-300 py-6 text-sm font-bold text-neutral-500 sm:w-[min(1160px,calc(100%-40px))]">
-      <p>元浩讀書生活 · {t("footer")}</p>
+      <p>Day One / One Day · {t("footer")}</p>
     </footer>
   );
 }

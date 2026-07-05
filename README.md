@@ -1,6 +1,6 @@
-# Eddy 每日學習
+# Day One / One Day
 
-Minimal daily learning card app built with Next.js and Supabase.
+Daily learning journal built with Next.js and Supabase.
 
 ## Run locally
 

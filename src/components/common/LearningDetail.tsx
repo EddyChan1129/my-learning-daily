@@ -15,7 +15,6 @@ import {
   getCurrentUser,
   setCurrentUserCache,
 } from "@/features/auth/services/auth.service";
-import { learningCardImage } from "@/features/category/constants";
 import { useCategories } from "@/features/category/hooks/useCategories";
 import { getProfile } from "@/features/profile/services/profile.service";
 import { getSupabase } from "@/lib/supabase";
@@ -292,7 +291,6 @@ export function LearningDetail({ slug }: { slug: string }) {
     learned_date: card.learned_date,
     image_url: card.image_url,
   };
-  const imageUrl = learningCardImage(card);
 
   return (
     <main className="mx-auto w-[min(820px,calc(100%-32px))] py-8 sm:py-12">
@@ -346,14 +344,6 @@ export function LearningDetail({ slug }: { slug: string }) {
           <time className="text-sm font-bold text-neutral-600">
             {dayjs(card.learned_date).format("YYYY-MM-DD")}
           </time>
-          <div className="mt-6 grid max-h-[420px] place-items-center overflow-hidden border border-stone-200 bg-[#eef4ee]">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              className="max-h-[420px] w-full object-contain"
-              src={imageUrl}
-              alt=""
-            />
-          </div>
           <LearningContent
             className="mt-6 text-lg text-neutral-950 [&_.text-large]:text-2xl"
             html={card.content}

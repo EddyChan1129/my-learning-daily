@@ -7,8 +7,8 @@ import { Navbar } from "@/components/layout/Navbar";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "元浩讀書生活",
-  description: "A daily study and life journal by Yuen Ho",
+  title: "Day One / One Day",
+  description: "A daily learning journal for recording progress.",
 };
 
 export default function RootLayout({

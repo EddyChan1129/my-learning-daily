@@ -20,13 +20,8 @@ export function categoryImageForId(id?: string | null) {
 
 export function learningCardImage(card: {
   category?: string | null;
-  image_url?: string | null;
   sub_field?: string | null;
 }) {
-  const imageUrl = card.image_url?.trim();
-
-  if (imageUrl && !imageUrl.endsWith("/no_img.png")) return imageUrl;
-
   return (
     categoryImageForId(card.sub_field) ||
     categoryImageForId(card.category) ||
