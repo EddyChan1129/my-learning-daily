@@ -7,15 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
-import type { LearningCardInput, LearningCategory } from "@/types/learning";
+import type { LearningCategory } from "@/features/category/types";
+import type { LearningCardInput } from "@/types/learning";
 import { contentSummary } from "@/utils/content";
-import { defaultLearningCategories, validateCard } from "@/utils/learning";
+import { validateCard } from "@/utils/learning";
 
 type Props = {
   initialValue: LearningCardInput;
   submitLabel: string;
   uploadFolder: string;
-  categories?: LearningCategory[];
+  categories: LearningCategory[];
   onSubmit: (value: LearningCardInput) => Promise<void>;
   onCancel?: () => void;
 };
@@ -24,7 +25,7 @@ export function CardForm({
   initialValue,
   submitLabel,
   uploadFolder,
-  categories = defaultLearningCategories,
+  categories,
   onSubmit,
   onCancel,
 }: Props) {

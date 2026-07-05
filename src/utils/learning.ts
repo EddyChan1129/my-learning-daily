@@ -2,7 +2,6 @@ import { z } from "zod";
 import type {
   LearningCard,
   LearningCardInput,
-  LearningCategory,
 } from "@/types/learning";
 import { contentHasImage, contentText } from "@/utils/content";
 
@@ -23,12 +22,6 @@ export const emptyCard: LearningCardInput = {
   learned_date: new Date().toISOString().slice(0, 10),
   image_url: null,
 };
-
-export const defaultLearningCategories: LearningCategory[] = [
-  { id: "IT", name: "IT", sort_order: 1, created_at: null },
-  { id: "psycology", name: "psycology", sort_order: 2, created_at: null },
-  { id: "others", name: "others", sort_order: 3, created_at: null },
-];
 
 export function slugify(value: string) {
   const slug = value

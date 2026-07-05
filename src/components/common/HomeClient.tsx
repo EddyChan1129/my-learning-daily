@@ -6,16 +6,15 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CardForm } from "@/components/common/CardForm";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { useCategories } from "@/features/category/hooks/useCategories";
 import { getSupabase } from "@/lib/supabase";
 import type {
   LearningCard,
   LearningCardInput,
-  LearningCategory,
   Profile,
 } from "@/types/learning";
 import { cloudinaryLearningFolder } from "@/utils/cloudinary";
 import {
-  defaultLearningCategories,
   emptyCard,
   formatLearningCardError,
   readableLearningId,
@@ -36,13 +35,12 @@ export function HomeClient() {
   const [draftUploadId, setDraftUploadId] = useState(() =>
     readableLearningId([], dayjs().format("YYYY-MM-DD")),
   );
-  const [categories, setCategories] = useState(defaultLearningCategories);
+  const categories = useCategories();
   const [currentProfile, setCurrentProfile] = useState<Profile | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   useEffect(() => {
     loadCards();
-    loadCategories();
 
     if (!supabase) return;
 
@@ -101,19 +99,6 @@ export function HomeClient() {
     setProfiles(
       Object.fromEntries((data ?? []).map((profile) => [profile.id, profile])),
     );
-  }
-
-  async function loadCategories() {
-    if (!supabase) return;
-
-    const { data } = await supabase
-      .from("categories")
-      .select("*")
-      .order("sort_order", { ascending: true })
-      .order("name", { ascending: true })
-      .returns<LearningCategory[]>();
-
-    if (data?.length) setCategories(data);
   }
 
   async function loadCurrentProfile(currentUser: User) {
