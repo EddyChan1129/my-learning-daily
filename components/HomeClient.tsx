@@ -10,10 +10,12 @@ import { getSupabase } from "@/lib/supabase";
 import type {
   LearningCard,
   LearningCardInput,
+  LearningCategory,
   Profile,
 } from "@/types/learning";
 import { cloudinaryLearningFolder } from "@/utils/cloudinary";
 import {
+  defaultLearningCategories,
   emptyCard,
   formatLearningCardError,
   readableLearningId,
@@ -34,11 +36,13 @@ export function HomeClient() {
   const [draftUploadId, setDraftUploadId] = useState(() =>
     readableLearningId([], dayjs().format("YYYY-MM-DD")),
   );
+  const [categories, setCategories] = useState(defaultLearningCategories);
   const [currentProfile, setCurrentProfile] = useState<Profile | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   useEffect(() => {
     loadCards();
+    loadCategories();
 
     if (!supabase) return;
 
@@ -99,6 +103,19 @@ export function HomeClient() {
     );
   }
 
+  async function loadCategories() {
+    if (!supabase) return;
+
+    const { data } = await supabase
+      .from("categories")
+      .select("*")
+      .order("sort_order", { ascending: true })
+      .order("name", { ascending: true })
+      .returns<LearningCategory[]>();
+
+    if (data?.length) setCategories(data);
+  }
+
   async function loadCurrentProfile(currentUser: User) {
     if (!supabase) return;
 
@@ -154,7 +171,7 @@ export function HomeClient() {
     : cards;
 
   return (
-    <main className="relative mx-auto w-[min(1160px,calc(100%_-_28px))] border-x border-stone-300 px-4 pb-16 pt-24 shadow-[inset_1px_0_0_rgba(255,255,255,0.75),inset_-1px_0_0_rgba(255,255,255,0.75)] sm:w-[min(1160px,calc(100%_-_40px))] sm:px-8 sm:pt-28">
+    <main className="relative mx-auto w-[min(1160px,calc(100%-28px))] border-x border-stone-300 px-4 pb-16 pt-24 shadow-[inset_1px_0_0_rgba(255,255,255,0.75),inset_-1px_0_0_rgba(255,255,255,0.75)] sm:w-[min(1160px,calc(100%-40px))] sm:px-8 sm:pt-28">
       <section className="grid gap-6 pb-8 sm:pb-12 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end">
         <div className="border-l border-neutral-950 pl-4 sm:pl-6">
           <p className="mb-4 text-sm font-black text-emerald-800">
@@ -214,6 +231,7 @@ export function HomeClient() {
                 currentProfile?.username ?? user.email?.split("@")[0] ?? "user",
                 draftUploadId,
               )}
+              categories={categories}
               onSubmit={createCard}
             />
           ) : null}

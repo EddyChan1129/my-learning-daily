@@ -14,6 +14,13 @@ export type LearningCard = {
   profiles?: Profile | null;
 };
 
+export type LearningCategory = {
+  id: string;
+  name: string;
+  sort_order: number;
+  created_at: string | null;
+};
+
 export type LearningCardInput = {
   title: string;
   category: string;

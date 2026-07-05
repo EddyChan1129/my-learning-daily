@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { getSupabase } from "@/lib/supabase";
 import type {
   LearningCard,
+  LearningCategory,
   LearningCardInput,
   LearningComment,
   Profile,
@@ -21,6 +22,7 @@ import {
   cloudinaryLearningFolderFromUrl,
 } from "@/utils/cloudinary";
 import {
+  defaultLearningCategories,
   formatLearningCardError,
   isUuid,
 } from "@/utils/learning";
@@ -37,6 +39,7 @@ export function LearningDetail({ slug }: { slug: string }) {
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState("");
   const [comments, setComments] = useState<LearningComment[]>([]);
+  const [categories, setCategories] = useState(defaultLearningCategories);
   const [commentName, setCommentName] = useState(() =>
     typeof window === "undefined"
       ? ""
@@ -79,6 +82,7 @@ export function LearningDetail({ slug }: { slug: string }) {
     }
 
     loadCard();
+    loadCategories();
 
     if (!supabase) return;
 
@@ -126,6 +130,19 @@ export function LearningDetail({ slug }: { slug: string }) {
 
     setComments(data ?? []);
     setCommentMessage("");
+  }
+
+  async function loadCategories() {
+    if (!supabase) return;
+
+    const { data } = await supabase
+      .from("categories")
+      .select("*")
+      .order("sort_order", { ascending: true })
+      .order("name", { ascending: true })
+      .returns<LearningCategory[]>();
+
+    if (data?.length) setCategories(data);
   }
 
   async function loadProfile(currentUser: User) {
@@ -220,7 +237,7 @@ export function LearningDetail({ slug }: { slug: string }) {
 
   if (!supabase) {
     return (
-      <main className="mx-auto w-[min(820px,calc(100%_-_32px))] py-8 sm:py-12">
+      <main className="mx-auto w-[min(820px,calc(100%-32px))] py-8 sm:py-12">
         <Link className={buttonVariants({ variant: "secondary" })} href="/">
           {t("back")}
         </Link>
@@ -233,7 +250,7 @@ export function LearningDetail({ slug }: { slug: string }) {
 
   if (!card) {
     return (
-      <main className="mx-auto w-[min(820px,calc(100%_-_32px))] py-8 sm:py-12">
+      <main className="mx-auto w-[min(820px,calc(100%-32px))] py-8 sm:py-12">
         <Link className={buttonVariants({ variant: "secondary" })} href="/">
           {t("back")}
         </Link>
@@ -252,7 +269,7 @@ export function LearningDetail({ slug }: { slug: string }) {
   };
 
   return (
-    <main className="mx-auto w-[min(820px,calc(100%_-_32px))] py-8 sm:py-12">
+    <main className="mx-auto w-[min(820px,calc(100%-32px))] py-8 sm:py-12">
       <Link
         className={buttonVariants({ className: "mb-5", variant: "secondary" })}
         href="/"
@@ -271,6 +288,7 @@ export function LearningDetail({ slug }: { slug: string }) {
               card.cloud_id ?? card.id,
             )
           }
+          categories={categories}
           onSubmit={updateCard}
           onCancel={() => setEditing(false)}
         />

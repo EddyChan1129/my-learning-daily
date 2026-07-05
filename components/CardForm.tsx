@@ -7,14 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
-import type { LearningCardInput } from "@/types/learning";
+import type { LearningCardInput, LearningCategory } from "@/types/learning";
 import { contentSummary } from "@/utils/content";
-import { validateCard } from "@/utils/learning";
+import { defaultLearningCategories, validateCard } from "@/utils/learning";
 
 type Props = {
   initialValue: LearningCardInput;
   submitLabel: string;
   uploadFolder: string;
+  categories?: LearningCategory[];
   onSubmit: (value: LearningCardInput) => Promise<void>;
   onCancel?: () => void;
 };
@@ -23,6 +24,7 @@ export function CardForm({
   initialValue,
   submitLabel,
   uploadFolder,
+  categories = defaultLearningCategories,
   onSubmit,
   onCancel,
 }: Props) {
@@ -97,9 +99,11 @@ export function CardForm({
           required
         >
           <option value="">Select category</option>
-          <option value="IT">IT</option>
-          <option value="psycology">psycology</option>
-          <option value="others">others</option>
+          {categories.map((category) => (
+            <option key={category.id} value={category.id}>
+              {category.name}
+            </option>
+          ))}
         </Select>
       </Label>
       <div className="grid gap-1.5">

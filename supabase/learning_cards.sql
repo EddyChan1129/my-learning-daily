@@ -1,3 +1,29 @@
+create table if not exists public.categories (
+  id text primary key,
+  name text not null,
+  sort_order integer not null default 0,
+  created_at timestamptz default now()
+);
+
+insert into public.categories (id, name, sort_order)
+values
+  ('IT', 'IT', 1),
+  ('psycology', 'psycology', 2),
+  ('others', 'others', 3)
+on conflict (id) do update
+set
+  name = excluded.name,
+  sort_order = excluded.sort_order;
+
+alter table public.categories enable row level security;
+
+drop policy if exists "Anyone can view categories"
+on public.categories;
+
+create policy "Anyone can view categories"
+on public.categories for select
+using (true);
+
 create table if not exists public.learning_cards (
   id uuid primary key default gen_random_uuid(),
   title text not null,

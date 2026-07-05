@@ -60,7 +60,7 @@ export function LoginClient() {
   }
 
   return (
-    <main className="mx-auto grid min-h-screen w-[min(460px,calc(100%_-_32px))] place-items-center py-10">
+    <main className="mx-auto grid min-h-screen w-[min(460px,calc(100%-32px))] place-items-center py-10">
       <Card className="w-full p-6 sm:p-8">
         <Link
           className={buttonVariants({
