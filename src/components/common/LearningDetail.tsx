@@ -3,7 +3,7 @@
 import Link from "next/link";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CardForm } from "@/components/common/CardForm";
 import { LearningContent } from "@/components/common/LearningContent";
@@ -45,6 +45,7 @@ export function LearningDetail({ slug }: { slug: string }) {
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const deleteStartedRef = useRef(false);
   const [comments, setComments] = useState<LearningComment[]>([]);
   const categories = useCategories();
   const [commentName, setCommentName] = useState(() =>
@@ -174,7 +175,14 @@ export function LearningDetail({ slug }: { slug: string }) {
   }
 
   async function deleteCard() {
-    if (!supabase || !card || !confirm("Delete this learning card?")) return;
+    if (!supabase || !card || deleteStartedRef.current) return;
+
+    deleteStartedRef.current = true;
+
+    if (!confirm("Delete this learning card?")) {
+      deleteStartedRef.current = false;
+      return;
+    }
 
     setDeleting(true);
     setMessage("");
@@ -189,6 +197,7 @@ export function LearningDetail({ slug }: { slug: string }) {
       if (!response.ok) {
         setMessage(data.error ?? "Delete failed.");
         setDeleting(false);
+        deleteStartedRef.current = false;
         return;
       }
 
@@ -196,6 +205,7 @@ export function LearningDetail({ slug }: { slug: string }) {
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Delete failed.");
       setDeleting(false);
+      deleteStartedRef.current = false;
     }
   }
 
@@ -327,7 +337,11 @@ export function LearningDetail({ slug }: { slug: string }) {
               <Button variant="secondary" onClick={() => setEditing(true)}>
                 {t("edit")}
               </Button>
-              <Button variant="destructive" onClick={deleteCard}>
+              <Button
+                disabled={deleting}
+                variant="destructive"
+                onClick={deleteCard}
+              >
                 {t("delete")}
               </Button>
             </div>
