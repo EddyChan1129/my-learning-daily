@@ -8,6 +8,7 @@ import { contentHasImage, contentText } from "@/utils/content";
 export const learningCardSchema = z.object({
   title: z.string().trim().min(1, "Title is required."),
   category: z.string().trim().min(1, "Category is required."),
+  sub_field: z.string().trim().min(1, "Sub field is required."),
   learned_date: z.string().min(1, "Date learned is required."),
   summary: z.string(),
   content: z.string().trim().min(1, "Content is required."),
@@ -17,6 +18,7 @@ export const learningCardSchema = z.object({
 export const emptyCard: LearningCardInput = {
   title: "",
   category: "",
+  sub_field: "",
   summary: "",
   content: "",
   learned_date: new Date().toISOString().slice(0, 10),

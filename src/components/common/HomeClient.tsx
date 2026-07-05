@@ -38,6 +38,7 @@ export function HomeClient() {
   const categories = useCategories();
   const [currentProfile, setCurrentProfile] = useState<Profile | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedSubField, setSelectedSubField] = useState<string | null>(null);
 
   useEffect(() => {
     loadCards();
@@ -127,6 +128,7 @@ export function HomeClient() {
 
     setShowForm(false);
     setSelectedCategory(null);
+    setSelectedSubField(null);
     setDraftUploadId(
       readableLearningId(cards, dayjs().format("YYYY-MM-DD")),
     );
@@ -151,8 +153,18 @@ export function HomeClient() {
   const wallTitle = ownerName ? `${ownerName}讀書生活` : t("dailyWall");
   const wallSubtitle = ownerName ? `${ownerName} Study Life` : "Study Life";
   const categoryPlaylists = buildCategoryPlaylists(cards);
+  const subFieldPlaylists = selectedCategory
+    ? buildSubFieldPlaylists(
+        cards.filter((card) => card.category === selectedCategory),
+      )
+    : [];
   const visibleCards = selectedCategory
-    ? cards.filter((card) => card.category === selectedCategory)
+    ? cards.filter(
+        (card) =>
+          card.category === selectedCategory &&
+          (!selectedSubField ||
+            (card.sub_field ?? "uncategorized") === selectedSubField),
+      )
     : cards;
 
   return (
@@ -226,7 +238,7 @@ export function HomeClient() {
       <div className="mb-4 flex flex-wrap items-end justify-between gap-4 border-b border-stone-300 pb-3">
         <div>
           <h2 className="text-2xl font-black tracking-normal text-neutral-950">
-            {selectedCategory ?? t("learningWall")}
+            {selectedSubField ?? selectedCategory ?? t("learningWall")}
           </h2>
           <p className="text-sm text-neutral-600">
             {selectedCategory
@@ -235,8 +247,18 @@ export function HomeClient() {
           </p>
         </div>
         {selectedCategory ? (
-          <Button variant="secondary" onClick={() => setSelectedCategory(null)}>
-            All categories
+          <Button
+            variant="secondary"
+            onClick={() => {
+              if (selectedSubField) {
+                setSelectedSubField(null);
+                return;
+              }
+
+              setSelectedCategory(null);
+            }}
+          >
+            {selectedSubField ? selectedCategory : "All categories"}
           </Button>
         ) : null}
       </div>
@@ -245,10 +267,19 @@ export function HomeClient() {
       {!loading && cards.length > 0 && !selectedCategory ? (
         <CategoryPlaylistGrid
           playlists={categoryPlaylists}
-          onSelect={setSelectedCategory}
+          onSelect={(category) => {
+            setSelectedCategory(category);
+            setSelectedSubField(null);
+          }}
         />
       ) : null}
-      {!loading && selectedCategory ? (
+      {!loading && selectedCategory && !selectedSubField ? (
+        <CategoryPlaylistGrid
+          playlists={subFieldPlaylists}
+          onSelect={setSelectedSubField}
+        />
+      ) : null}
+      {!loading && selectedCategory && selectedSubField ? (
         <LearningCardGrid cards={visibleCards} profiles={profiles} />
       ) : null}
       {!loading && cards.length === 0 && !message ? (
@@ -271,6 +302,20 @@ function buildCategoryPlaylists(cards: LearningCard[]): CategoryPlaylist[] {
       ...(playlists.get(card.category) ?? []),
       card,
     ]);
+  }
+
+  return Array.from(playlists, ([category, categoryCards]) => ({
+    category,
+    cards: categoryCards,
+  })).sort((left, right) => right.cards.length - left.cards.length);
+}
+
+function buildSubFieldPlaylists(cards: LearningCard[]): CategoryPlaylist[] {
+  const playlists = new Map<string, LearningCard[]>();
+
+  for (const card of cards) {
+    const subField = card.sub_field ?? "uncategorized";
+    playlists.set(subField, [...(playlists.get(subField) ?? []), card]);
   }
 
   return Array.from(playlists, ([category, categoryCards]) => ({
@@ -414,7 +459,9 @@ function LearningCardLink({
       <div className="p-4 sm:p-5">
         <div className="mb-3 flex items-center justify-between gap-3 text-xs font-black uppercase text-neutral-500">
           <p>
-            {card.category} · {authorLabel(card.user_id, profile)}
+            {[card.category, card.sub_field, authorLabel(card.user_id, profile)]
+              .filter(Boolean)
+              .join(" · ")}
           </p>
           <time>{dayjs(card.learned_date).format("YYYY-MM-DD")}</time>
         </div>

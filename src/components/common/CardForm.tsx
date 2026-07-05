@@ -33,6 +33,7 @@ export function CardForm({
   const [value, setValue] = useState(initialValue);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const categoryGroups = groupCategories(categories);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -93,17 +94,29 @@ export function CardForm({
       <Label>
         {t("category")}
         <Select
-          value={value.category}
-          onChange={(event) =>
-            setValue({ ...value, category: event.target.value })
-          }
+          value={value.sub_field}
+          onChange={(event) => {
+            const category = categories.find(
+              (item) => item.id === event.target.value,
+            );
+
+            setValue({
+              ...value,
+              category: category?.category ?? "",
+              sub_field: category?.id ?? "",
+            });
+          }}
           required
         >
           <option value="">Select category</option>
-          {categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
+          {categoryGroups.map((group) => (
+            <optgroup key={group.category} label={group.category}>
+              {group.categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </optgroup>
           ))}
         </Select>
       </Label>
@@ -137,4 +150,20 @@ export function CardForm({
       </div>
     </form>
   );
+}
+
+function groupCategories(categories: LearningCategory[]) {
+  const groups = new Map<string, LearningCategory[]>();
+
+  for (const category of categories) {
+    groups.set(category.category, [
+      ...(groups.get(category.category) ?? []),
+      category,
+    ]);
+  }
+
+  return Array.from(groups, ([category, groupedCategories]) => ({
+    category,
+    categories: groupedCategories,
+  }));
 }

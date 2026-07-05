@@ -4,6 +4,7 @@ export type LearningCard = {
   title: string;
   slug: string | null;
   category: string;
+  sub_field: string | null;
   summary: string;
   content: string;
   learned_date: string;
@@ -17,6 +18,7 @@ export type LearningCard = {
 export type LearningCardInput = {
   title: string;
   category: string;
+  sub_field: string;
   summary: string;
   content: string;
   learned_date: string;

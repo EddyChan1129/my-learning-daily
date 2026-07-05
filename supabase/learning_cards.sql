@@ -1,17 +1,30 @@
 create table if not exists public.categories (
   id text primary key,
+  category text not null,
   name text not null,
   sort_order integer not null default 0,
   created_at timestamptz default now()
 );
 
-insert into public.categories (id, name, sort_order)
+alter table public.categories
+add column if not exists category text not null default 'IT';
+
+delete from public.categories
+where id in ('IT', 'psycology', 'others');
+
+insert into public.categories (id, category, name, sort_order)
 values
-  ('IT', 'IT', 1),
-  ('psycology', 'psycology', 2),
-  ('others', 'others', 3)
+  ('leetcode', 'IT', 'leetcode', 1),
+  ('javascript', 'IT', 'javascript', 2),
+  ('springboot', 'IT', 'springboot', 3),
+  ('interview question', 'IT', 'interview question', 4),
+  ('security', 'IT', 'security', 5),
+  ('networking', 'IT', 'networking', 6),
+  ('working issues', 'IT', 'working issues', 7),
+  ('other', 'Other', 'other', 1)
 on conflict (id) do update
 set
+  category = excluded.category,
   name = excluded.name,
   sort_order = excluded.sort_order;
 
@@ -30,6 +43,7 @@ create table if not exists public.learning_cards (
   cloud_id text unique,
   slug text unique,
   category text not null,
+  sub_field text,
   summary text not null,
   content text not null,
   learned_date date not null,
@@ -41,6 +55,31 @@ create table if not exists public.learning_cards (
 
 alter table public.learning_cards
 add column if not exists cloud_id text;
+
+alter table public.learning_cards
+add column if not exists sub_field text;
+
+update public.learning_cards
+set
+  sub_field = category,
+  category = 'IT'
+where category in (
+  'leetcode',
+  'javascript',
+  'springboot',
+  'interview question',
+  'security',
+  'networking',
+  'working issues'
+)
+and (sub_field is null or sub_field = '');
+
+update public.learning_cards
+set
+  sub_field = 'other',
+  category = 'Other'
+where category in ('other', 'others')
+and (sub_field is null or sub_field = '');
 
 create unique index if not exists learning_cards_cloud_id_key
 on public.learning_cards (cloud_id)

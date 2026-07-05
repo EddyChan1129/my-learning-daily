@@ -5,6 +5,7 @@ export async function getCategories(supabase: SupabaseClient) {
   const { data, error } = await supabase
     .from("categories")
     .select("*")
+    .order("category", { ascending: true })
     .order("sort_order", { ascending: true })
     .order("name", { ascending: true })
     .returns<LearningCategory[]>();

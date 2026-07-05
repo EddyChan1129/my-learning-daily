@@ -247,6 +247,7 @@ export function LearningDetail({ slug }: { slug: string }) {
   const formValue: LearningCardInput = {
     title: card.title,
     category: card.category,
+    sub_field: card.sub_field ?? "",
     summary: card.summary,
     content: card.content,
     learned_date: card.learned_date,
@@ -280,7 +281,7 @@ export function LearningDetail({ slug }: { slug: string }) {
       ) : (
         <Card className="p-5 sm:p-7">
           <p className="mb-2 text-sm font-bold uppercase text-neutral-600">
-            {card.category}
+            {[card.category, card.sub_field].filter(Boolean).join(" / ")}
           </p>
           <h1 className="mb-3 text-[clamp(36px,7vw,76px)] font-black leading-none tracking-normal text-neutral-950">
             {card.title}
