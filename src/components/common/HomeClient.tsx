@@ -33,9 +33,11 @@ import {
 import type { User } from "@supabase/supabase-js";
 
 const supabase = getSupabase();
+type HomeScope = "all" | "mine";
 
-export function HomeClient() {
+export function HomeClient({ scope = "all" }: { scope?: HomeScope }) {
   const { t } = useTranslation();
+  const isMyLearning = scope === "mine";
   const [cards, setCards] = useState<LearningCard[]>([]);
   const [profiles, setProfiles] = useState<Record<string, Profile>>({});
   const [user, setUser] = useState<User | null>(null);
@@ -53,17 +55,21 @@ export function HomeClient() {
   useEffect(() => {
     if (!supabase) return;
 
+    if (!isMyLearning) loadCards();
+
     getCurrentUser(supabase).then((currentUser) => {
       setUser(currentUser);
       if (currentUser) {
         loadCurrentProfile(currentUser);
-        loadCards(currentUser.id);
+        if (isMyLearning) loadCards(currentUser.id);
         return;
       }
 
-      setCards([]);
-      setProfiles({});
-      setLoading(false);
+      if (isMyLearning) {
+        setCards([]);
+        setProfiles({});
+        setLoading(false);
+      }
     });
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
       const nextUser = session?.user ?? null;
@@ -72,22 +78,24 @@ export function HomeClient() {
       setUser(nextUser);
       if (nextUser) {
         loadCurrentProfile(nextUser);
-        loadCards(nextUser.id, { force: true });
+        if (isMyLearning) loadCards(nextUser.id, { force: true });
         return;
       }
 
-      setCards([]);
-      setProfiles({});
       setCurrentProfile(null);
-      setLoading(false);
+      if (isMyLearning) {
+        setCards([]);
+        setProfiles({});
+        setLoading(false);
+      }
     });
 
     return () => data.subscription.unsubscribe();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isMyLearning]);
 
   async function loadCards(
-    userId: string,
+    userId?: string,
     { force = false }: { force?: boolean } = {},
   ) {
     if (!supabase) {
@@ -149,7 +157,7 @@ export function HomeClient() {
     setDraftUploadId(
       readableLearningId(cards, dayjs().format("YYYY-MM-DD")),
     );
-    await loadCards(user.id, { force: true });
+    await loadCards(isMyLearning ? user.id : undefined, { force: true });
   }
 
   function toggleForm() {
@@ -167,8 +175,10 @@ export function HomeClient() {
   const contributorCount = new Set(cards.map((card) => card.user_id ?? "guest"))
     .size;
   const ownerName = currentProfile?.username ?? user?.email?.split("@")[0];
-  const wallTitle = ownerName ? `${ownerName}讀書生活` : t("dailyWall");
-  const wallSubtitle = ownerName ? `${ownerName} Study Life` : "Study Life";
+  const wallTitle =
+    isMyLearning && ownerName ? `${ownerName}讀書生活` : t("dailyWall");
+  const wallSubtitle =
+    isMyLearning && ownerName ? `${ownerName} Study Life` : "Study Life";
   const categoryPlaylists = buildCategoryPlaylists(cards, categories);
   const subFieldPlaylists = selectedCategory
     ? buildSubFieldPlaylists(
@@ -229,12 +239,17 @@ export function HomeClient() {
         <ErrorState
           message={message}
           onRetry={() => {
-            if (user) loadCards(user.id, { force: true });
+            if (isMyLearning) {
+              if (user) loadCards(user.id, { force: true });
+              return;
+            }
+
+            loadCards(undefined, { force: true });
           }}
         />
       ) : null}
 
-      {user ? (
+      {isMyLearning && user ? (
         <section className="mb-8 border border-stone-300 bg-[#fffdf8] p-4 shadow-[6px_6px_0_rgba(26,26,26,0.88)]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>

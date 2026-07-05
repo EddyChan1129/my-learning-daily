@@ -6,20 +6,22 @@ const profileListPromises = new Map<string, Promise<Record<string, Profile>>>();
 
 export async function getLearningCards(
   supabase: SupabaseClient,
-  { force = false, userId }: { force?: boolean; userId: string },
+  { force = false, userId }: { force?: boolean; userId?: string } = {},
 ) {
-  if (force) learningCardsPromises.delete(userId);
+  const cacheKey = userId ?? "all";
+
+  if (force) learningCardsPromises.delete(cacheKey);
 
   learningCardsPromises.set(
-    userId,
-    learningCardsPromises.get(userId) ??
+    cacheKey,
+    learningCardsPromises.get(cacheKey) ??
       fetchLearningCards(supabase, userId).catch((error) => {
-        learningCardsPromises.delete(userId);
+        learningCardsPromises.delete(cacheKey);
         throw error;
       }),
   );
 
-  return learningCardsPromises.get(userId)!;
+  return learningCardsPromises.get(cacheKey)!;
 }
 
 export async function getProfilesByIds(
@@ -43,11 +45,14 @@ export async function getProfilesByIds(
   return profileListPromises.get(cacheKey)!;
 }
 
-async function fetchLearningCards(supabase: SupabaseClient, userId: string) {
-  const { data, error } = await supabase
+async function fetchLearningCards(supabase: SupabaseClient, userId?: string) {
+  let query = supabase
     .from("learning_cards")
-    .select("*")
-    .eq("user_id", userId)
+    .select("*");
+
+  if (userId) query = query.eq("user_id", userId);
+
+  const { data, error } = await query
     .order("learned_date", { ascending: false })
     .returns<LearningCard[]>();
 
