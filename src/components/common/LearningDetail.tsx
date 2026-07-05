@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import dayjs from "dayjs";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CardForm } from "@/components/common/CardForm";
@@ -37,6 +38,7 @@ const supabase = getSupabase();
 
 export function LearningDetail({ slug }: { slug: string }) {
   const { t } = useTranslation();
+  const router = useRouter();
   const [card, setCard] = useState<LearningCard | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -190,7 +192,7 @@ export function LearningDetail({ slug }: { slug: string }) {
         return;
       }
 
-      window.location.href = "/";
+      router.replace("/");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Delete failed.");
       setDeleting(false);
