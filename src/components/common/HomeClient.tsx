@@ -10,8 +10,8 @@ import {
   getCurrentUser,
   setCurrentUserCache,
 } from "@/features/auth/services/auth.service";
+import { categoryImageById } from "@/features/category/constants";
 import { useCategories } from "@/features/category/hooks/useCategories";
-import type { LearningCategory } from "@/features/category/types";
 import {
   getLearningCards,
   getProfilesByIds,
@@ -179,11 +179,10 @@ export function HomeClient({ scope = "all" }: { scope?: HomeScope }) {
     isMyLearning && ownerName ? `${ownerName}讀書生活` : t("dailyWall");
   const wallSubtitle =
     isMyLearning && ownerName ? `${ownerName} Study Life` : "Study Life";
-  const categoryPlaylists = buildCategoryPlaylists(cards, categories);
+  const categoryPlaylists = buildCategoryPlaylists(cards);
   const subFieldPlaylists = selectedCategory
     ? buildSubFieldPlaylists(
         cards.filter((card) => card.category === selectedCategory),
-        categories,
       )
     : [];
   const visibleCards = selectedCategory
@@ -335,10 +334,7 @@ type CategoryPlaylist = {
   cards: LearningCard[];
 };
 
-function buildCategoryPlaylists(
-  cards: LearningCard[],
-  categories: LearningCategory[],
-): CategoryPlaylist[] {
+function buildCategoryPlaylists(cards: LearningCard[]): CategoryPlaylist[] {
   const playlists = new Map<string, LearningCard[]>();
 
   for (const card of cards) {
@@ -350,17 +346,12 @@ function buildCategoryPlaylists(
 
   return Array.from(playlists, ([category, categoryCards]) => ({
     category,
-    categoryImage:
-      categories.find((item) => item.category === category)?.category_image ??
-      "",
+    categoryImage: categoryImageById[category] ?? "",
     cards: categoryCards,
   })).sort((left, right) => right.cards.length - left.cards.length);
 }
 
-function buildSubFieldPlaylists(
-  cards: LearningCard[],
-  categories: LearningCategory[],
-): CategoryPlaylist[] {
+function buildSubFieldPlaylists(cards: LearningCard[]): CategoryPlaylist[] {
   const playlists = new Map<string, LearningCard[]>();
 
   for (const card of cards) {
@@ -370,10 +361,7 @@ function buildSubFieldPlaylists(
 
   return Array.from(playlists, ([category, categoryCards]) => ({
     category,
-    categoryImage:
-      categories.find(
-        (item) => item.id === category || item.name === category,
-      )?.category_image ?? "",
+    categoryImage: categoryImageById[category] ?? "",
     cards: categoryCards,
   })).sort((left, right) => right.cards.length - left.cards.length);
 }

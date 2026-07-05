@@ -1,10 +1,20 @@
 import type { LearningCategory } from "@/features/category/types";
 
+export const categoryImageById: Record<string, string> = {
+  leetcode: "/images/category/leetcode.png",
+  javascript: "/images/category/js.png",
+  springboot: "/images/category/springboot.png",
+  "interview question": "/images/category/inter_quest.png",
+  security: "/images/category/security.png",
+  networking: "/images/category/net.png",
+  "working issues": "/images/category/wk_is.png",
+  other: "/images/category/other.png",
+};
+
 export const defaultLearningCategories: LearningCategory[] = [
   {
     id: "leetcode",
     category: "IT",
-    category_image: "/images/category/leetcode.png",
     name: "leetcode",
     sort_order: 1,
     created_at: null,
@@ -12,7 +22,6 @@ export const defaultLearningCategories: LearningCategory[] = [
   {
     id: "javascript",
     category: "IT",
-    category_image: "/images/category/js.png",
     name: "javascript",
     sort_order: 2,
     created_at: null,
@@ -20,7 +29,6 @@ export const defaultLearningCategories: LearningCategory[] = [
   {
     id: "springboot",
     category: "IT",
-    category_image: "/images/category/springboot.png",
     name: "springboot",
     sort_order: 3,
     created_at: null,
@@ -28,7 +36,6 @@ export const defaultLearningCategories: LearningCategory[] = [
   {
     id: "interview question",
     category: "IT",
-    category_image: "/images/category/inter_quest.png",
     name: "interview question",
     sort_order: 4,
     created_at: null,
@@ -36,7 +43,6 @@ export const defaultLearningCategories: LearningCategory[] = [
   {
     id: "security",
     category: "IT",
-    category_image: "/images/category/security.png",
     name: "security",
     sort_order: 5,
     created_at: null,
@@ -44,7 +50,6 @@ export const defaultLearningCategories: LearningCategory[] = [
   {
     id: "networking",
     category: "IT",
-    category_image: "/images/category/net.png",
     name: "networking",
     sort_order: 6,
     created_at: null,
@@ -52,7 +57,6 @@ export const defaultLearningCategories: LearningCategory[] = [
   {
     id: "working issues",
     category: "IT",
-    category_image: "/images/category/wk_is.png",
     name: "working issues",
     sort_order: 7,
     created_at: null,
@@ -60,7 +64,6 @@ export const defaultLearningCategories: LearningCategory[] = [
   {
     id: "other",
     category: "Other",
-    category_image: "/images/category/other.png",
     name: "other",
     sort_order: 1,
     created_at: null,

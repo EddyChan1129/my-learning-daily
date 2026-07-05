@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
+import { categoryImageById } from "@/features/category/constants";
 import type { LearningCategory } from "@/features/category/types";
 import type { LearningCardInput } from "@/types/learning";
 import { contentSummary, firstContentImageUrl } from "@/utils/content";
@@ -70,7 +71,10 @@ export function CardForm({
     try {
       const nextValue = {
         ...value,
-        image_url: firstContentImageUrl(value.content),
+        image_url:
+          firstContentImageUrl(value.content) ??
+          categoryImageById[value.sub_field] ??
+          null,
         summary: contentSummary(value.content),
       };
 

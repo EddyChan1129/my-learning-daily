@@ -10,25 +10,24 @@ alter table public.categories
 add column if not exists category text not null default 'IT';
 
 alter table public.categories
-add column if not exists category_image text not null default '';
+drop column if exists category_image;
 
 delete from public.categories
 where id in ('IT', 'psycology', 'others');
 
-insert into public.categories (id, category, name, sort_order, category_image)
+insert into public.categories (id, category, name, sort_order)
 values
-  ('leetcode', 'IT', 'leetcode', 1, '/images/category/leetcode.png'),
-  ('javascript', 'IT', 'javascript', 2, '/images/category/js.png'),
-  ('springboot', 'IT', 'springboot', 3, '/images/category/springboot.png'),
-  ('interview question', 'IT', 'interview question', 4, '/images/category/inter_quest.png'),
-  ('security', 'IT', 'security', 5, '/images/category/security.png'),
-  ('networking', 'IT', 'networking', 6, '/images/category/net.png'),
-  ('working issues', 'IT', 'working issues', 7, '/images/category/wk_is.png'),
-  ('other', 'Other', 'other', 1, '/images/category/other.png')
+  ('leetcode', 'IT', 'leetcode', 1),
+  ('javascript', 'IT', 'javascript', 2),
+  ('springboot', 'IT', 'springboot', 3),
+  ('interview question', 'IT', 'interview question', 4),
+  ('security', 'IT', 'security', 5),
+  ('networking', 'IT', 'networking', 6),
+  ('working issues', 'IT', 'working issues', 7),
+  ('other', 'Other', 'other', 1)
 on conflict (id) do update
 set
   category = excluded.category,
-  category_image = excluded.category_image,
   name = excluded.name,
   sort_order = excluded.sort_order;
 
