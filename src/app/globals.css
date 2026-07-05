@@ -51,6 +51,14 @@
     border-radius: 0.5rem;
   }
 
+  .learning-content .emoji-image {
+    display: inline-block;
+    width: 2.25rem;
+    height: 2.25rem;
+    object-fit: contain;
+    vertical-align: -0.55rem;
+  }
+
   .learning-content pre {
     margin: 1rem 0;
     overflow-x: auto;

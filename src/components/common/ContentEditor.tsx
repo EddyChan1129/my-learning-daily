@@ -3,7 +3,11 @@
 import { ChangeEvent, ClipboardEvent, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { uploadLearningImage } from "@/utils/cloudinary";
+import {
+  CLOUDINARY_EMOJIS,
+  cloudinaryEmojiUrl,
+  uploadLearningImage,
+} from "@/utils/cloudinary";
 import { sanitizeContent } from "@/utils/content";
 
 type Props = {
@@ -12,33 +16,6 @@ type Props = {
   onChange: (value: string) => void;
   onFirstImage: (imageUrl: string) => void;
 };
-
-const EMOJIS = [
-  "😀",
-  "😂",
-  "😍",
-  "😎",
-  "😭",
-  "😡",
-  "😱",
-  "😴",
-  "🤔",
-  "🙄",
-  "😏",
-  "🥲",
-  "👍",
-  "👎",
-  "👏",
-  "🙏",
-  "💪",
-  "🔥",
-  "✨",
-  "💯",
-  "❤️",
-  "💀",
-  "🤡",
-  "🐶",
-];
 
 function escapeHtml(value: string) {
   return value
@@ -114,9 +91,14 @@ export function ContentEditor({
     syncValue();
   }
 
-  function insertEmoji(emoji: string) {
+  function insertEmoji(publicId: string, label: string) {
+    const imageUrl = cloudinaryEmojiUrl(publicId);
+    if (!imageUrl) return;
+
     editorRef.current?.focus();
-    insertHtml(emoji);
+    insertHtml(
+      `<img class="emoji-image" src="${imageUrl}" alt="${label}" />&nbsp;`,
+    );
     syncValue();
   }
 
@@ -218,17 +200,30 @@ export function ContentEditor({
         </div>
         {showEmojis ? (
           <div className="grid grid-cols-8 gap-1 border-b border-stone-200 bg-[#26373b] p-2 sm:grid-cols-12">
-            {EMOJIS.map((emoji) => (
+            {CLOUDINARY_EMOJIS.map((emoji) => {
+              const imageUrl = cloudinaryEmojiUrl(emoji.publicId);
+
+              return (
               <button
-                key={emoji}
+                key={emoji.publicId}
                 type="button"
-                className="flex aspect-square items-center justify-center rounded-md text-xl transition hover:bg-white/15 focus-visible:outline-2 focus-visible:outline-white"
+                className="flex aspect-square items-center justify-center rounded-md transition hover:bg-white/15 focus-visible:outline-2 focus-visible:outline-white"
                 onMouseDown={(event) => event.preventDefault()}
-                onClick={() => insertEmoji(emoji)}
+                onClick={() => insertEmoji(emoji.publicId, emoji.label)}
               >
-                {emoji}
+                {imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    alt={emoji.label}
+                    className="h-8 w-8 object-contain"
+                    src={imageUrl}
+                  />
+                ) : (
+                  "?"
+                )}
               </button>
-            ))}
+              );
+            })}
           </div>
         ) : null}
         <div
