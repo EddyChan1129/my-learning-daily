@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { AuthButton } from "@/components/AuthButton";
-import { Footer } from "@/components/Footer";
-import { I18nProvider } from "@/components/I18nProvider";
-import { LanguageSelect } from "@/components/LanguageSelect";
+import { AuthButton } from "@/components/layout/AuthButton";
+import { Footer } from "@/components/layout/Footer";
+import { I18nProvider } from "@/components/common/I18nProvider";
+import { LanguageSelect } from "@/components/layout/LanguageSelect";
 import "./globals.css";
 
 export const metadata: Metadata = {

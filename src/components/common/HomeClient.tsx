@@ -4,7 +4,7 @@ import dayjs from "dayjs";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { CardForm } from "@/components/CardForm";
+import { CardForm } from "@/components/common/CardForm";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { getSupabase } from "@/lib/supabase";
 import type {
