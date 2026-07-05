@@ -22,7 +22,7 @@ export function cloudinaryEmojiUrl(publicId: string) {
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
   if (!cloudName) return "";
 
-  return `https://res.cloudinary.com/${cloudName}/image/upload/${CLOUDINARY_EMOJI_FOLDER}/${publicId}`;
+  return `https://res.cloudinary.com/${cloudName}/image/upload/${publicId}`;
 }
 
 export function cloudinaryLearningFolderFromUrl(url: string | null, postId: string) {
@@ -58,7 +58,9 @@ export function cloudinaryPublicIdsFromContent(content: string) {
       (publicId): publicId is string =>
         Boolean(publicId) &&
         !CLOUDINARY_EMOJIS.some(
-          (emoji) => publicId === `${CLOUDINARY_EMOJI_FOLDER}/${emoji.publicId}`,
+          (emoji) =>
+            publicId === emoji.publicId ||
+            publicId === `${CLOUDINARY_EMOJI_FOLDER}/${emoji.publicId}`,
         ),
     );
 }
