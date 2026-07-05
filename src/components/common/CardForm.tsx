@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ContentEditor } from "@/components/common/ContentEditor";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Select } from "@/components/ui/select";
 import type { LearningCategory } from "@/features/category/types";
 import type { LearningCardInput } from "@/types/learning";
 import { contentSummary, firstContentImageUrl } from "@/utils/content";
+import { cloudinaryPublicIdsFromContent } from "@/utils/cloudinary";
 import { validateCard } from "@/utils/learning";
 
 type Props = {
@@ -34,6 +35,26 @@ export function CardForm({
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const categoryGroups = groupCategories(categories);
+  const initialImagePublicIds = useMemo(
+    () => cloudinaryPublicIdsFromContent(initialValue.content),
+    [initialValue.content],
+  );
+  const currentImagePublicIds = cloudinaryPublicIdsFromContent(value.content);
+  const isRemovingImage = initialImagePublicIds.some(
+    (publicId) => !currentImagePublicIds.includes(publicId),
+  );
+
+  useEffect(() => {
+    if (!saving && !isRemovingImage) return;
+
+    function blockLeave(event: BeforeUnloadEvent) {
+      event.preventDefault();
+      event.returnValue = "";
+    }
+
+    window.addEventListener("beforeunload", blockLeave);
+    return () => window.removeEventListener("beforeunload", blockLeave);
+  }, [isRemovingImage, saving]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -70,6 +91,18 @@ export function CardForm({
       className="mt-4 grid gap-4 border-t border-stone-200 pt-4"
       onSubmit={handleSubmit}
     >
+      {saving ? (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-neutral-950/35 p-4"
+          role="status"
+          aria-live="polite"
+        >
+          <div className="flex min-w-72 items-center gap-3 rounded-lg border border-stone-200 bg-white px-5 py-4 text-sm font-black text-neutral-950 shadow-[8px_8px_0_#1a1a1a]">
+            <span className="h-5 w-5 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-950" />
+            {isRemovingImage ? "Removing image and saving..." : t("saving")}
+          </div>
+        </div>
+      ) : null}
       {error ? (
         <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-bold text-red-800">
           {error}

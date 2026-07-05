@@ -39,12 +39,22 @@ export function LearningContent({ html, className = "" }: Props) {
 
   useEffect(() => {
     registerHighlighter();
-    contentRef.current
-      ?.querySelectorAll("pre code")
-      .forEach((block) => {
-        const codeBlock = block as HTMLElement;
+    contentRef.current?.querySelectorAll("pre").forEach((pre) => {
+      const code = pre.querySelector("code");
+      if (code) {
+        const codeBlock = code as HTMLElement;
         if (!codeBlock.dataset.highlighted) hljs.highlightElement(codeBlock);
-      });
+      }
+
+      if (!pre.querySelector("[data-copy-code]")) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "code-copy-button";
+        button.dataset.copyCode = "true";
+        button.textContent = "Copy";
+        pre.append(button);
+      }
+    });
   }, [sanitizedHtml]);
 
   useEffect(() => {
@@ -58,8 +68,26 @@ export function LearningContent({ html, className = "" }: Props) {
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [previewImage]);
 
-  function openImagePreview(event: MouseEvent<HTMLDivElement>) {
+  async function handleContentClick(event: MouseEvent<HTMLDivElement>) {
     const target = event.target;
+    const element = target instanceof Element ? target : null;
+    const copyButton = element?.closest<HTMLButtonElement>("[data-copy-code]");
+
+    if (copyButton) {
+      const code =
+        copyButton.closest("pre")?.querySelector("code")?.textContent ?? "";
+      try {
+        await navigator.clipboard.writeText(code);
+        copyButton.textContent = "Copied";
+      } catch {
+        copyButton.textContent = "Failed";
+      }
+      window.setTimeout(() => {
+        copyButton.textContent = "Copy";
+      }, 1200);
+      return;
+    }
+
     if (!(target instanceof HTMLImageElement)) return;
     if (!target.classList.contains("content-image")) return;
 
@@ -72,7 +100,7 @@ export function LearningContent({ html, className = "" }: Props) {
         ref={contentRef}
         className={`learning-content ${className}`}
         dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
-        onClick={openImagePreview}
+        onClick={handleContentClick}
       />
       {previewImage ? (
         <div

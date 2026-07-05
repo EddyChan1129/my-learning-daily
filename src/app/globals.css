@@ -61,15 +61,34 @@
   }
 
   .learning-content pre {
+    position: relative;
     margin: 1rem 0;
     overflow-x: auto;
     border: 1px solid #2f3b37;
     border-radius: 0.5rem;
     background: #101413;
-    padding: 1rem;
+    padding: 2.75rem 1rem 1rem;
     color: #d6deeb;
     font-size: 0.92rem;
     line-height: 1.65;
+  }
+
+  .learning-content .code-copy-button {
+    position: absolute;
+    right: 0.75rem;
+    top: 0.65rem;
+    border: 1px solid #3b4845;
+    border-radius: 999px;
+    background: #18201e;
+    padding: 0.25rem 0.65rem;
+    color: #d6deeb;
+    font-size: 0.75rem;
+    font-weight: 900;
+    line-height: 1.2;
+  }
+
+  .learning-content .code-copy-button:hover {
+    background: #25312e;
   }
 
   .learning-content code {
