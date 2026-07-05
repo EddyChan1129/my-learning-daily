@@ -1,21 +1,25 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { LearningCard, Profile } from "@/types/learning";
 
-let learningCardsPromise: Promise<LearningCard[]> | null = null;
+const learningCardsPromises = new Map<string, Promise<LearningCard[]>>();
 const profileListPromises = new Map<string, Promise<Record<string, Profile>>>();
 
 export async function getLearningCards(
   supabase: SupabaseClient,
-  { force = false }: { force?: boolean } = {},
+  { force = false, userId }: { force?: boolean; userId: string },
 ) {
-  if (force) learningCardsPromise = null;
+  if (force) learningCardsPromises.delete(userId);
 
-  learningCardsPromise ??= fetchLearningCards(supabase).catch((error) => {
-    learningCardsPromise = null;
-    throw error;
-  });
+  learningCardsPromises.set(
+    userId,
+    learningCardsPromises.get(userId) ??
+      fetchLearningCards(supabase, userId).catch((error) => {
+        learningCardsPromises.delete(userId);
+        throw error;
+      }),
+  );
 
-  return learningCardsPromise;
+  return learningCardsPromises.get(userId)!;
 }
 
 export async function getProfilesByIds(
@@ -39,10 +43,11 @@ export async function getProfilesByIds(
   return profileListPromises.get(cacheKey)!;
 }
 
-async function fetchLearningCards(supabase: SupabaseClient) {
+async function fetchLearningCards(supabase: SupabaseClient, userId: string) {
   const { data, error } = await supabase
     .from("learning_cards")
     .select("*")
+    .eq("user_id", userId)
     .order("learned_date", { ascending: false })
     .returns<LearningCard[]>();
 

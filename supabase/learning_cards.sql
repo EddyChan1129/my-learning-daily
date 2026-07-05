@@ -9,6 +9,9 @@ create table if not exists public.categories (
 alter table public.categories
 add column if not exists category text not null default 'IT';
 
+alter table public.categories
+add column if not exists category_image text not null default '';
+
 delete from public.categories
 where id in ('IT', 'psycology', 'others');
 

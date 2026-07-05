@@ -42,6 +42,7 @@ export function LearningDetail({ slug }: { slug: string }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState("");
+  const [deleting, setDeleting] = useState(false);
   const [comments, setComments] = useState<LearningComment[]>([]);
   const categories = useCategories();
   const [commentName, setCommentName] = useState(() =>
@@ -103,6 +104,18 @@ export function LearningDetail({ slug }: { slug: string }) {
     return () => data.subscription.unsubscribe();
   }, [slug]);
 
+  useEffect(() => {
+    if (!deleting) return;
+
+    function blockLeave(event: BeforeUnloadEvent) {
+      event.preventDefault();
+      event.returnValue = "";
+    }
+
+    window.addEventListener("beforeunload", blockLeave);
+    return () => window.removeEventListener("beforeunload", blockLeave);
+  }, [deleting]);
+
   async function loadCardBySlugPrefix(value: string) {
     if (!supabase || isUuid(value)) return null;
 
@@ -161,18 +174,27 @@ export function LearningDetail({ slug }: { slug: string }) {
   async function deleteCard() {
     if (!supabase || !card || !confirm("Delete this learning card?")) return;
 
-    const response = await fetch(`/api/learning-cards/${card.id}`, {
-      headers: await authHeaders(),
-      method: "DELETE",
-    });
-    const data = await response.json();
+    setDeleting(true);
+    setMessage("");
 
-    if (!response.ok) {
-      setMessage(data.error ?? "Delete failed.");
-      return;
+    try {
+      const response = await fetch(`/api/learning-cards/${card.id}`, {
+        headers: await authHeaders(),
+        method: "DELETE",
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        setMessage(data.error ?? "Delete failed.");
+        setDeleting(false);
+        return;
+      }
+
+      window.location.href = "/";
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Delete failed.");
+      setDeleting(false);
     }
-
-    window.location.href = "/";
   }
 
   async function createComment() {
@@ -256,6 +278,7 @@ export function LearningDetail({ slug }: { slug: string }) {
 
   return (
     <main className="mx-auto w-[min(820px,calc(100%-32px))] py-8 sm:py-12">
+      {deleting ? <BlockingOverlay message={t("deletingDoNotLeave")} /> : null}
       <Link
         className={buttonVariants({ className: "mb-5", variant: "secondary" })}
         href="/"
@@ -382,6 +405,21 @@ export function LearningDetail({ slug }: { slug: string }) {
         </div>
       </section>
     </main>
+  );
+}
+
+function BlockingOverlay({ message }: { message: string }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 grid place-items-center bg-neutral-950/35 p-4"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="flex min-w-72 items-center gap-3 rounded-lg border border-stone-200 bg-white px-5 py-4 text-sm font-black text-neutral-950 shadow-[8px_8px_0_#1a1a1a]">
+        <span className="h-5 w-5 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-950" />
+        {message}
+      </div>
+    </div>
   );
 }
 

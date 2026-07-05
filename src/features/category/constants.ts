@@ -4,6 +4,7 @@ export const defaultLearningCategories: LearningCategory[] = [
   {
     id: "leetcode",
     category: "IT",
+    category_image: "",
     name: "leetcode",
     sort_order: 1,
     created_at: null,
@@ -11,6 +12,7 @@ export const defaultLearningCategories: LearningCategory[] = [
   {
     id: "javascript",
     category: "IT",
+    category_image: "",
     name: "javascript",
     sort_order: 2,
     created_at: null,
@@ -18,6 +20,7 @@ export const defaultLearningCategories: LearningCategory[] = [
   {
     id: "springboot",
     category: "IT",
+    category_image: "",
     name: "springboot",
     sort_order: 3,
     created_at: null,
@@ -25,6 +28,7 @@ export const defaultLearningCategories: LearningCategory[] = [
   {
     id: "interview question",
     category: "IT",
+    category_image: "",
     name: "interview question",
     sort_order: 4,
     created_at: null,
@@ -32,6 +36,7 @@ export const defaultLearningCategories: LearningCategory[] = [
   {
     id: "security",
     category: "IT",
+    category_image: "",
     name: "security",
     sort_order: 5,
     created_at: null,
@@ -39,6 +44,7 @@ export const defaultLearningCategories: LearningCategory[] = [
   {
     id: "networking",
     category: "IT",
+    category_image: "",
     name: "networking",
     sort_order: 6,
     created_at: null,
@@ -46,6 +52,7 @@ export const defaultLearningCategories: LearningCategory[] = [
   {
     id: "working issues",
     category: "IT",
+    category_image: "",
     name: "working issues",
     sort_order: 7,
     created_at: null,
@@ -53,6 +60,7 @@ export const defaultLearningCategories: LearningCategory[] = [
   {
     id: "other",
     category: "Other",
+    category_image: "",
     name: "other",
     sort_order: 1,
     created_at: null,

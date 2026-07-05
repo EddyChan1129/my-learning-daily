@@ -6,8 +6,7 @@ import { useTranslation } from "react-i18next";
 import { cn } from "@/utils/cn";
 
 const NAV_ITEMS = [
-  { href: "/", labelKey: "home" },
-  { href: "/find-tutor", labelKey: "findTutor" },
+  { href: "/", labelKey: "myLearning" },
   { href: "/contact-us", labelKey: "contactUs" },
   { href: "/faq", labelKey: "faq" },
 ];

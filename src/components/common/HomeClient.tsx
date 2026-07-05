@@ -11,6 +11,7 @@ import {
   setCurrentUserCache,
 } from "@/features/auth/services/auth.service";
 import { useCategories } from "@/features/category/hooks/useCategories";
+import type { LearningCategory } from "@/features/category/types";
 import {
   getLearningCards,
   getProfilesByIds,
@@ -39,7 +40,7 @@ export function HomeClient() {
   const [profiles, setProfiles] = useState<Record<string, Profile>>({});
   const [user, setUser] = useState<User | null>(null);
   const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => Boolean(supabase));
   const [showForm, setShowForm] = useState(false);
   const [draftUploadId, setDraftUploadId] = useState(() =>
     readableLearningId([], dayjs().format("YYYY-MM-DD")),
@@ -50,26 +51,45 @@ export function HomeClient() {
   const [selectedSubField, setSelectedSubField] = useState<string | null>(null);
 
   useEffect(() => {
-    loadCards();
-
     if (!supabase) return;
 
     getCurrentUser(supabase).then((currentUser) => {
       setUser(currentUser);
-      if (currentUser) loadCurrentProfile(currentUser);
+      if (currentUser) {
+        loadCurrentProfile(currentUser);
+        loadCards(currentUser.id);
+        return;
+      }
+
+      setCards([]);
+      setProfiles({});
+      setLoading(false);
     });
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-      setCurrentUserCache(session?.user ?? null);
-      setUser(session?.user ?? null);
-      if (session?.user) loadCurrentProfile(session.user);
-      if (!session?.user) setCurrentProfile(null);
+      const nextUser = session?.user ?? null;
+
+      setCurrentUserCache(nextUser);
+      setUser(nextUser);
+      if (nextUser) {
+        loadCurrentProfile(nextUser);
+        loadCards(nextUser.id, { force: true });
+        return;
+      }
+
+      setCards([]);
+      setProfiles({});
+      setCurrentProfile(null);
+      setLoading(false);
     });
 
     return () => data.subscription.unsubscribe();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function loadCards({ force = false }: { force?: boolean } = {}) {
+  async function loadCards(
+    userId: string,
+    { force = false }: { force?: boolean } = {},
+  ) {
     if (!supabase) {
       setLoading(false);
       return;
@@ -78,7 +98,7 @@ export function HomeClient() {
     setLoading(true);
 
     try {
-      const data = await getLearningCards(supabase, { force });
+      const data = await getLearningCards(supabase, { force, userId });
 
       setCards(data);
       await loadProfiles(data);
@@ -129,7 +149,7 @@ export function HomeClient() {
     setDraftUploadId(
       readableLearningId(cards, dayjs().format("YYYY-MM-DD")),
     );
-    await loadCards({ force: true });
+    await loadCards(user.id, { force: true });
   }
 
   function toggleForm() {
@@ -149,10 +169,11 @@ export function HomeClient() {
   const ownerName = currentProfile?.username ?? user?.email?.split("@")[0];
   const wallTitle = ownerName ? `${ownerName}讀書生活` : t("dailyWall");
   const wallSubtitle = ownerName ? `${ownerName} Study Life` : "Study Life";
-  const categoryPlaylists = buildCategoryPlaylists(cards);
+  const categoryPlaylists = buildCategoryPlaylists(cards, categories);
   const subFieldPlaylists = selectedCategory
     ? buildSubFieldPlaylists(
         cards.filter((card) => card.category === selectedCategory),
+        categories,
       )
     : [];
   const visibleCards = selectedCategory
@@ -204,7 +225,14 @@ export function HomeClient() {
         </div>
       </section>
 
-      {message ? <ErrorState message={message} onRetry={loadCards} /> : null}
+      {message ? (
+        <ErrorState
+          message={message}
+          onRetry={() => {
+            if (user) loadCards(user.id, { force: true });
+          }}
+        />
+      ) : null}
 
       {user ? (
         <section className="mb-8 border border-stone-300 bg-[#fffdf8] p-4 shadow-[6px_6px_0_rgba(26,26,26,0.88)]">
@@ -288,10 +316,14 @@ export function HomeClient() {
 
 type CategoryPlaylist = {
   category: string;
+  categoryImage: string;
   cards: LearningCard[];
 };
 
-function buildCategoryPlaylists(cards: LearningCard[]): CategoryPlaylist[] {
+function buildCategoryPlaylists(
+  cards: LearningCard[],
+  categories: LearningCategory[],
+): CategoryPlaylist[] {
   const playlists = new Map<string, LearningCard[]>();
 
   for (const card of cards) {
@@ -303,11 +335,17 @@ function buildCategoryPlaylists(cards: LearningCard[]): CategoryPlaylist[] {
 
   return Array.from(playlists, ([category, categoryCards]) => ({
     category,
+    categoryImage:
+      categories.find((item) => item.category === category)?.category_image ??
+      "",
     cards: categoryCards,
   })).sort((left, right) => right.cards.length - left.cards.length);
 }
 
-function buildSubFieldPlaylists(cards: LearningCard[]): CategoryPlaylist[] {
+function buildSubFieldPlaylists(
+  cards: LearningCard[],
+  categories: LearningCategory[],
+): CategoryPlaylist[] {
   const playlists = new Map<string, LearningCard[]>();
 
   for (const card of cards) {
@@ -317,6 +355,10 @@ function buildSubFieldPlaylists(cards: LearningCard[]): CategoryPlaylist[] {
 
   return Array.from(playlists, ([category, categoryCards]) => ({
     category,
+    categoryImage:
+      categories.find(
+        (item) => item.id === category || item.name === category,
+      )?.category_image ?? "",
     cards: categoryCards,
   })).sort((left, right) => right.cards.length - left.cards.length);
 }
@@ -351,6 +393,7 @@ function CategoryPlaylistBox({
   playlist: CategoryPlaylist;
   onSelect: (category: string) => void;
 }) {
+  const imageUrl = playlist.categoryImage.trim();
   const coverCards = playlist.cards.slice(0, 3);
   const latestCard = playlist.cards[0];
 
@@ -361,24 +404,36 @@ function CategoryPlaylistBox({
       onClick={() => onSelect(playlist.category)}
     >
       <div className="relative h-56 overflow-hidden border border-stone-300 bg-stone-200 shadow-[0_10px_28px_rgba(26,26,26,0.06)] transition group-hover:-translate-y-1 group-hover:border-neutral-950 group-hover:shadow-[6px_6px_0_#1a1a1a] motion-reduce:transition-none motion-reduce:group-hover:translate-y-0 sm:h-60">
-        {coverCards.map((card, index) => (
-          <div
-            className="absolute inset-y-0 overflow-hidden border-l border-white/50 bg-[#eef4ee]"
-            key={card.id}
-            style={{
-              left: `${index * 16}%`,
-              right: `${(coverCards.length - index - 1) * 8}%`,
-              zIndex: index + 1,
-            }}
-          >
+        {imageUrl ? (
+          <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               className="h-full w-full object-cover object-top"
-              src={card.image_url ?? "/no_img.png"}
+              src={imageUrl}
               alt=""
             />
-          </div>
-        ))}
+            <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/35 via-transparent to-transparent" />
+          </>
+        ) : (
+          coverCards.map((card, index) => (
+            <div
+              className="absolute inset-y-0 overflow-hidden border-l border-white/50 bg-[#eef4ee]"
+              key={card.id}
+              style={{
+                left: `${index * 16}%`,
+                right: `${(coverCards.length - index - 1) * 8}%`,
+                zIndex: index + 1,
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                className="h-full w-full object-cover object-top"
+                src={card.image_url ?? "/no_img.png"}
+                alt=""
+              />
+            </div>
+          ))
+        )}
         <div className="absolute bottom-3 right-3 z-10 border border-neutral-950 bg-neutral-950/85 px-3 py-1 text-sm font-black text-white">
           {playlist.cards.length} cards
         </div>

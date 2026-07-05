@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -21,7 +21,9 @@ export function LoginClient() {
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<"login" | "register">("login");
 
-  async function submit() {
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
     if (!supabase) {
       setMessage("請先加入 Supabase env vars。Add Supabase env vars.");
       return;
@@ -77,7 +79,7 @@ export function LoginClient() {
         <h1 className="mb-6 text-4xl font-black leading-none text-neutral-950">
           {mode === "login" ? t("signInTitle") : t("signUpTitle")}
         </h1>
-        <div className="grid gap-3">
+        <form className="grid gap-3" onSubmit={submit}>
           {mode === "register" ? (
             <Input
               autoComplete="name"
@@ -101,7 +103,7 @@ export function LoginClient() {
             onChange={(event) => setPassword(event.target.value)}
           />
           {message ? <p className="text-sm font-bold text-red-700">{message}</p> : null}
-          <Button disabled={loading} onClick={submit}>
+          <Button disabled={loading} type="submit">
             {loading
               ? t("saving")
               : mode === "login"
@@ -115,7 +117,7 @@ export function LoginClient() {
           >
             {mode === "login" ? t("noAccount") : t("login")}
           </Button>
-        </div>
+        </form>
       </Card>
     </main>
   );
