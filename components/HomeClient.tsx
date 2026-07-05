@@ -13,7 +13,12 @@ import type {
   Profile,
 } from "@/types/learning";
 import { cloudinaryLearningFolder } from "@/utils/cloudinary";
-import { emptyCard, formatLearningCardError, slugify } from "@/utils/learning";
+import {
+  emptyCard,
+  formatLearningCardError,
+  readableLearningId,
+  slugify,
+} from "@/utils/learning";
 import type { User } from "@supabase/supabase-js";
 
 const supabase = getSupabase();
@@ -26,7 +31,9 @@ export function HomeClient() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [draftCardId, setDraftCardId] = useState(() => crypto.randomUUID());
+  const [draftUploadId, setDraftUploadId] = useState(() =>
+    readableLearningId([], dayjs().format("YYYY-MM-DD")),
+  );
   const [currentProfile, setCurrentProfile] = useState<Profile | null>(null);
 
   useEffect(() => {
@@ -107,8 +114,8 @@ export function HomeClient() {
     if (!supabase || !user) return;
 
     const { error } = await supabase.from("learning_cards").insert({
-      id: draftCardId,
       ...value,
+      cloud_id: draftUploadId,
       slug: slugify(value.title),
       user_id: user.id,
     });
@@ -116,12 +123,18 @@ export function HomeClient() {
     if (error) throw error;
 
     setShowForm(false);
-    setDraftCardId(crypto.randomUUID());
+    setDraftUploadId(
+      readableLearningId(cards, dayjs().format("YYYY-MM-DD")),
+    );
     await loadCards();
   }
 
   function toggleForm() {
-    if (!showForm) setDraftCardId(crypto.randomUUID());
+    if (!showForm) {
+      setDraftUploadId(
+        readableLearningId(cards, dayjs().format("YYYY-MM-DD")),
+      );
+    }
     setShowForm(!showForm);
   }
 
@@ -193,7 +206,7 @@ export function HomeClient() {
               submitLabel={t("create")}
               uploadFolder={cloudinaryLearningFolder(
                 currentProfile?.username ?? user.email?.split("@")[0] ?? "user",
-                draftCardId,
+                draftUploadId,
               )}
               onSubmit={createCard}
             />
@@ -254,7 +267,7 @@ function LearningCardLink({
   return (
     <Link
       className="group overflow-hidden border border-stone-300 bg-white shadow-[0_10px_28px_rgba(26,26,26,0.05)] transition hover:-translate-y-1 hover:border-neutral-950 hover:shadow-[6px_6px_0_#1a1a1a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
-      href={`/learning/${card.id}`}
+      href={`/learning/${card.cloud_id ?? card.id}`}
     >
       <div className="grid h-64 place-items-center overflow-hidden border-b border-stone-200 bg-[#eef4ee] text-5xl font-black text-emerald-900 sm:h-72 lg:h-64">
         {card.image_url ? (

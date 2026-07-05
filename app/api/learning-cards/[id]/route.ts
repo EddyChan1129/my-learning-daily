@@ -109,7 +109,10 @@ export async function DELETE(
   const folders = Array.from(
     new Set(
       [
-        cloudinaryLearningFolder(ownerName(user.email, profile), card.id),
+        cloudinaryLearningFolder(
+          ownerName(user.email, profile),
+          card.cloud_id ?? card.id,
+        ),
         cloudinaryLearningFolderFromUrl(card.image_url, card.id),
       ].filter((folder): folder is string => Boolean(folder)),
     ),

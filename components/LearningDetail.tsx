@@ -16,7 +16,10 @@ import type {
   LearningComment,
   Profile,
 } from "@/types/learning";
-import { cloudinaryLearningFolder } from "@/utils/cloudinary";
+import {
+  cloudinaryLearningFolder,
+  cloudinaryLearningFolderFromUrl,
+} from "@/utils/cloudinary";
 import {
   formatLearningCardError,
   isUuid,
@@ -47,7 +50,11 @@ export function LearningDetail({ slug }: { slug: string }) {
     async function loadCard() {
       if (!supabase) return;
 
-      const column = isUuid(slug) ? "id" : "slug";
+      const column = isUuid(slug)
+        ? "id"
+        : /^\d+-\d{4}-\d{2}-\d{2}$/.test(slug)
+          ? "cloud_id"
+          : "slug";
       const { data, error } = await supabase
         .from("learning_cards")
         .select("*")
@@ -257,7 +264,13 @@ export function LearningDetail({ slug }: { slug: string }) {
         <CardForm
           initialValue={formValue}
           submitLabel={t("save")}
-          uploadFolder={cloudinaryLearningFolder(ownerName(user, profile), card.id)}
+          uploadFolder={
+            cloudinaryLearningFolderFromUrl(card.image_url, card.id) ??
+            cloudinaryLearningFolder(
+              ownerName(user, profile),
+              card.cloud_id ?? card.id,
+            )
+          }
           onSubmit={updateCard}
           onCancel={() => setEditing(false)}
         />

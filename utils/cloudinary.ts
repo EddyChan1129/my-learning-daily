@@ -17,7 +17,11 @@ export function cloudinaryLearningFolderFromUrl(url: string | null, postId: stri
   const parts = publicPath?.split("/") ?? [];
   const postIdIndex = parts.indexOf(postId);
 
-  if (postIdIndex < 0) return null;
+  if (postIdIndex < 0) {
+    return parts[0] === "learning" && parts.length > 2
+      ? parts.slice(0, -1).join("/")
+      : null;
+  }
 
   return parts.slice(0, postIdIndex + 1).join("/");
 }

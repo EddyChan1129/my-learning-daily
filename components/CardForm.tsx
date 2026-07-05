@@ -82,9 +82,7 @@ export function CardForm({
           <Input
             type="date"
             value={value.learned_date}
-            onChange={(event) =>
-              setValue({ ...value, learned_date: event.target.value })
-            }
+            readOnly
             required
           />
         </Label>

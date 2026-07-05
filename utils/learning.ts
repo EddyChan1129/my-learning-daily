@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { LearningCardInput } from "@/types/learning";
+import type { LearningCard, LearningCardInput } from "@/types/learning";
 import { contentHasImage, contentText } from "@/utils/content";
 
 export const learningCardSchema = z.object({
@@ -28,6 +28,20 @@ export function slugify(value: string) {
     .replace(/^-+|-+$/g, "");
 
   return `${slug || "learning"}-${Date.now()}`;
+}
+
+export function readableLearningId(cards: LearningCard[], date: string) {
+  const suffix = `-${date}`;
+  const maxId = Math.max(
+    0,
+    ...cards
+      .map((card) => card.cloud_id ?? card.id)
+      .filter((value) => value.endsWith(suffix))
+      .map((value) => Number(value.slice(0, -suffix.length)))
+      .filter(Number.isFinite),
+  );
+
+  return `${maxId + 1}-${date}`;
 }
 
 export function validateCard(input: LearningCardInput) {

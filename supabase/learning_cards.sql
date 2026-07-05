@@ -1,6 +1,7 @@
 create table if not exists public.learning_cards (
   id uuid primary key default gen_random_uuid(),
   title text not null,
+  cloud_id text unique,
   slug text unique,
   category text not null,
   summary text not null,
@@ -11,6 +12,13 @@ create table if not exists public.learning_cards (
   updated_at timestamptz default now(),
   user_id uuid references auth.users(id)
 );
+
+alter table public.learning_cards
+add column if not exists cloud_id text;
+
+create unique index if not exists learning_cards_cloud_id_key
+on public.learning_cards (cloud_id)
+where cloud_id is not null;
 
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,

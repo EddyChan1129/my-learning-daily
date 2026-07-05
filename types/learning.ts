@@ -1,5 +1,6 @@
 export type LearningCard = {
   id: string;
+  cloud_id: string | null;
   title: string;
   slug: string | null;
   category: string;
