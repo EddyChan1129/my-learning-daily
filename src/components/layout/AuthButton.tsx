@@ -6,6 +6,14 @@ import { useTranslation } from "react-i18next";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  getCurrentUser,
+  setCurrentUserCache,
+} from "@/features/auth/services/auth.service";
+import {
+  getProfile,
+  setProfileCache,
+} from "@/features/profile/services/profile.service";
 import { getSupabase } from "@/lib/supabase";
 import type { Profile } from "@/types/learning";
 import type { User } from "@supabase/supabase-js";
@@ -24,26 +32,9 @@ export function AuthButton() {
   async function loadProfile(currentUser: User) {
     if (!supabase) return;
 
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", currentUser.id)
-      .maybeSingle();
+    const nextProfile = await getProfile(supabase, currentUser);
 
-    const fallbackName =
-      (currentUser.user_metadata.username as string | undefined) ??
-      currentUser.email?.split("@")[0] ??
-      "User";
-
-    const nextProfile = data ?? {
-      id: currentUser.id,
-      username: fallbackName,
-      description: null,
-      photo_url: null,
-      created_at: null,
-      updated_at: null,
-    };
-
+    if (!nextProfile) return;
     setProfile(nextProfile);
     setUsername(nextProfile.username);
     setDescription(nextProfile.description ?? "");
@@ -53,11 +44,12 @@ export function AuthButton() {
   useEffect(() => {
     if (!supabase) return;
 
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
-      if (data.user) loadProfile(data.user);
+    getCurrentUser(supabase).then((currentUser) => {
+      setUser(currentUser);
+      if (currentUser) loadProfile(currentUser);
     });
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      setCurrentUserCache(session?.user ?? null);
       setUser(session?.user ?? null);
       if (session?.user) loadProfile(session.user);
       if (!session?.user) setProfile(null);
@@ -83,7 +75,10 @@ export function AuthButton() {
       .select()
       .single();
 
-    if (data) setProfile(data);
+    if (data) {
+      setProfile(data);
+      setProfileCache(data);
+    }
     setEditing(false);
   }
 

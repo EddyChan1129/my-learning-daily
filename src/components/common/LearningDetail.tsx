@@ -5,11 +5,17 @@ import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CardForm } from "@/components/common/CardForm";
+import { LearningContent } from "@/components/common/LearningContent";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  getCurrentUser,
+  setCurrentUserCache,
+} from "@/features/auth/services/auth.service";
 import { useCategories } from "@/features/category/hooks/useCategories";
+import { getProfile } from "@/features/profile/services/profile.service";
 import { getSupabase } from "@/lib/supabase";
 import type {
   LearningCard,
@@ -25,7 +31,6 @@ import {
   formatLearningCardError,
   isUuid,
 } from "@/utils/learning";
-import { sanitizeContent } from "@/utils/content";
 import type { User } from "@supabase/supabase-js";
 
 const supabase = getSupabase();
@@ -84,11 +89,12 @@ export function LearningDetail({ slug }: { slug: string }) {
 
     if (!supabase) return;
 
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
-      if (data.user) loadProfile(data.user);
+    getCurrentUser(supabase).then((currentUser) => {
+      setUser(currentUser);
+      if (currentUser) loadProfile(currentUser);
     });
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      setCurrentUserCache(session?.user ?? null);
       setUser(session?.user ?? null);
       if (session?.user) loadProfile(session.user);
       if (!session?.user) setProfile(null);
@@ -133,13 +139,7 @@ export function LearningDetail({ slug }: { slug: string }) {
   async function loadProfile(currentUser: User) {
     if (!supabase) return;
 
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", currentUser.id)
-      .maybeSingle();
-
-    setProfile(data);
+    setProfile(await getProfile(supabase, currentUser));
   }
 
   async function updateCard(value: LearningCardInput) {
@@ -289,9 +289,9 @@ export function LearningDetail({ slug }: { slug: string }) {
           <time className="text-sm font-bold text-neutral-600">
             {dayjs(card.learned_date).format("YYYY-MM-DD")}
           </time>
-          <div
-            className="learning-content mt-6 text-lg text-neutral-950 [&_.text-large]:text-2xl"
-            dangerouslySetInnerHTML={{ __html: sanitizeContent(card.content) }}
+          <LearningContent
+            className="mt-6 text-lg text-neutral-950 [&_.text-large]:text-2xl"
+            html={card.content}
           />
           <p className="mt-7 text-sm text-neutral-600">
             Created: {card.created_at ? dayjs(card.created_at).format("YYYY-MM-DD") : "-"} · Updated:{" "}

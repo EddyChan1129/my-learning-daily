@@ -2,7 +2,17 @@ export function sanitizeContent(html: string) {
   if (typeof window === "undefined") return html;
 
   const doc = new DOMParser().parseFromString(html, "text/html");
-  const allowedTags = new Set(["B", "BR", "DIV", "IMG", "P", "SPAN", "STRONG"]);
+  const allowedTags = new Set([
+    "B",
+    "BR",
+    "CODE",
+    "DIV",
+    "IMG",
+    "P",
+    "PRE",
+    "SPAN",
+    "STRONG",
+  ]);
 
   doc.body.querySelectorAll("*").forEach((node) => {
     if (!allowedTags.has(node.tagName)) {
@@ -18,7 +28,19 @@ export function sanitizeContent(html: string) {
         return;
       }
 
-      if (attr.name === "class" && attr.value === "text-large") return;
+      if (attr.name === "class") {
+        const allowedClasses =
+          node.tagName === "CODE"
+            ? attr.value
+                .split(/\s+/)
+                .filter((className) => /^language-[\w-]+$/.test(className))
+            : attr.value.split(/\s+/).filter((className) => className === "text-large");
+
+        if (allowedClasses.length) {
+          node.setAttribute("class", allowedClasses.join(" "));
+          return;
+        }
+      }
 
       node.removeAttribute(attr.name);
     });

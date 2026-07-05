@@ -13,6 +13,13 @@ type Props = {
   onFirstImage: (imageUrl: string) => void;
 };
 
+function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+
 export function ContentEditor({
   value,
   uploadFolder,
@@ -65,6 +72,18 @@ export function ContentEditor({
 
     range.deleteContents();
     range.insertNode(document.createRange().createContextualFragment(html));
+  }
+
+  function insertCodeBlock() {
+    editorRef.current?.focus();
+    const selection = window.getSelection();
+    const selectedText = selection?.toString();
+    const code = selectedText || "// write code here";
+
+    insertHtml(
+      `<pre><code class="language-tsx">${escapeHtml(code)}</code></pre><p><br></p>`,
+    );
+    syncValue();
   }
 
   async function insertImage(file: File) {
@@ -127,6 +146,14 @@ export function ContentEditor({
             onClick={() => runCommand("large")}
           >
             {t("large")}
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={insertCodeBlock}
+          >
+            Code
           </Button>
           <Button
             type="button"

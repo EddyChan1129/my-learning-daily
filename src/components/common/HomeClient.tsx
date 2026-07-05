@@ -6,7 +6,16 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CardForm } from "@/components/common/CardForm";
 import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  getCurrentUser,
+  setCurrentUserCache,
+} from "@/features/auth/services/auth.service";
 import { useCategories } from "@/features/category/hooks/useCategories";
+import {
+  getLearningCards,
+  getProfilesByIds,
+} from "@/features/learning/services/learning-card.service";
+import { getProfile } from "@/features/profile/services/profile.service";
 import { getSupabase } from "@/lib/supabase";
 import type {
   LearningCard,
@@ -45,11 +54,12 @@ export function HomeClient() {
 
     if (!supabase) return;
 
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
-      if (data.user) loadCurrentProfile(data.user);
+    getCurrentUser(supabase).then((currentUser) => {
+      setUser(currentUser);
+      if (currentUser) loadCurrentProfile(currentUser);
     });
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      setCurrentUserCache(session?.user ?? null);
       setUser(session?.user ?? null);
       if (session?.user) loadCurrentProfile(session.user);
       if (!session?.user) setCurrentProfile(null);
@@ -59,7 +69,7 @@ export function HomeClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function loadCards() {
+  async function loadCards({ force = false }: { force?: boolean } = {}) {
     if (!supabase) {
       setLoading(false);
       return;
@@ -67,21 +77,21 @@ export function HomeClient() {
 
     setLoading(true);
 
-    const { data, error } = await supabase
-      .from("learning_cards")
-      .select("*")
-      .order("learned_date", { ascending: false });
+    try {
+      const data = await getLearningCards(supabase, { force });
 
-    if (error) {
-      setMessage(formatLearningCardError(error.message));
+      setCards(data);
+      await loadProfiles(data);
+      setMessage("");
+    } catch (error) {
+      setMessage(
+        formatLearningCardError(
+          error instanceof Error ? error.message : "Learning cards failed.",
+        ),
+      );
+    } finally {
       setLoading(false);
-      return;
     }
-
-    setCards(data ?? []);
-    await loadProfiles(data ?? []);
-    setMessage("");
-    setLoading(false);
   }
 
   async function loadProfiles(nextCards: LearningCard[]) {
@@ -92,26 +102,13 @@ export function HomeClient() {
     ) as string[];
     if (userIds.length === 0) return;
 
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .in("id", userIds);
-
-    setProfiles(
-      Object.fromEntries((data ?? []).map((profile) => [profile.id, profile])),
-    );
+    setProfiles(await getProfilesByIds(supabase, userIds));
   }
 
   async function loadCurrentProfile(currentUser: User) {
     if (!supabase) return;
 
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", currentUser.id)
-      .maybeSingle();
-
-    setCurrentProfile(data);
+    setCurrentProfile(await getProfile(supabase, currentUser));
   }
 
   async function createCard(value: LearningCardInput) {
@@ -132,7 +129,7 @@ export function HomeClient() {
     setDraftUploadId(
       readableLearningId(cards, dayjs().format("YYYY-MM-DD")),
     );
-    await loadCards();
+    await loadCards({ force: true });
   }
 
   function toggleForm() {

@@ -1,7 +1,18 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { LearningCategory } from "@/features/category/types";
 
+let categoriesPromise: Promise<LearningCategory[]> | null = null;
+
 export async function getCategories(supabase: SupabaseClient) {
+  categoriesPromise ??= fetchCategories(supabase).catch((error) => {
+    categoriesPromise = null;
+    throw error;
+  });
+
+  return categoriesPromise;
+}
+
+async function fetchCategories(supabase: SupabaseClient) {
   const { data, error } = await supabase
     .from("categories")
     .select("*")
