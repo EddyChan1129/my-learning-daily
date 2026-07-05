@@ -41,6 +41,7 @@ export function LearningDetail({ slug }: { slug: string }) {
   const router = useRouter();
   const [card, setCard] = useState<LearningCard | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [authReady, setAuthReady] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState("");
@@ -96,12 +97,14 @@ export function LearningDetail({ slug }: { slug: string }) {
     getCurrentUser(supabase).then((currentUser) => {
       setUser(currentUser);
       if (currentUser) loadProfile(currentUser);
+      setAuthReady(true);
     });
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
       setCurrentUserCache(session?.user ?? null);
       setUser(session?.user ?? null);
       if (session?.user) loadProfile(session.user);
       if (!session?.user) setProfile(null);
+      setAuthReady(true);
     });
 
     return () => data.subscription.unsubscribe();
@@ -253,6 +256,7 @@ export function LearningDetail({ slug }: { slug: string }) {
   }
 
   const canEdit = Boolean(user && card && user.id === card.user_id);
+  const showComments = authReady && (!user || !canEdit);
 
   if (!supabase) {
     return (
@@ -291,33 +295,49 @@ export function LearningDetail({ slug }: { slug: string }) {
   return (
     <main className="mx-auto w-[min(820px,calc(100%-32px))] py-8 sm:py-12">
       {deleting ? <BlockingOverlay message={t("deletingDoNotLeave")} /> : null}
-      <Link
-        className={buttonVariants({ className: "mb-5", variant: "secondary" })}
-        href="/"
-      >
-        {t("back")}
-      </Link>
 
       {editing ? (
-        <CardForm
-          initialValue={formValue}
-          submitLabel={t("save")}
-          uploadFolder={
-            cloudinaryLearningFolderFromUrl(card.image_url, card.id) ??
-            cloudinaryLearningFolder(
-              ownerName(user, profile),
-              card.cloud_id ?? card.id,
-            )
-          }
-          categories={categories}
-          onSubmit={updateCard}
-          onCancel={() => setEditing(false)}
-        />
+        <>
+          <Link
+            className={buttonVariants({
+              className: "mb-5",
+              variant: "secondary",
+            })}
+            href="/"
+          >
+            {t("back")}
+          </Link>
+          <CardForm
+            initialValue={formValue}
+            submitLabel={t("save")}
+            uploadFolder={
+              cloudinaryLearningFolderFromUrl(card.image_url, card.id) ??
+              cloudinaryLearningFolder(
+                ownerName(user, profile),
+                card.cloud_id ?? card.id,
+              )
+            }
+            categories={categories}
+            onSubmit={updateCard}
+            onCancel={() => setEditing(false)}
+          />
+        </>
       ) : (
         <Card className="p-5 sm:p-7">
-          <p className="mb-2 text-sm font-bold uppercase text-neutral-600">
-            {[card.category, card.sub_field].filter(Boolean).join(" / ")}
-          </p>
+          <div className="mb-5 flex items-start justify-between gap-4">
+            <p className="text-sm font-bold uppercase text-neutral-600">
+              {[card.category, card.sub_field].filter(Boolean).join(" / ")}
+            </p>
+            <Link
+              className={buttonVariants({
+                className: "shrink-0",
+                variant: "secondary",
+              })}
+              href="/"
+            >
+              {t("back")}
+            </Link>
+          </div>
           <h1 className="mb-3 text-[clamp(36px,7vw,76px)] font-black leading-none tracking-normal text-neutral-950">
             {card.title}
           </h1>
@@ -348,79 +368,117 @@ export function LearningDetail({ slug }: { slug: string }) {
           ) : null}
         </Card>
       )}
-      <section className="mt-6 border border-neutral-950 bg-white p-4 shadow-[6px_6px_0_#1a1a1a] sm:p-5">
-        <div className="mb-4">
-          <h2 className="text-2xl font-black text-neutral-950">
-            {t("comments")}
-          </h2>
-          <p className="text-sm text-neutral-600">
-            {t("heroBody")}
-          </p>
-        </div>
-
-        <div className="grid gap-3">
-          <Input
-            value={commentName}
-            onChange={(event) => setCommentName(event.target.value)}
-            placeholder={t("name")}
-            maxLength={40}
-          />
-          <Textarea
-            className="min-h-24"
-            value={commentBody}
-            onChange={(event) => setCommentBody(event.target.value)}
-            placeholder={t("writeComment")}
-            maxLength={1000}
-          />
-          {commentMessage ? (
-            <p className="text-sm font-bold text-red-700">{commentMessage}</p>
-          ) : null}
-          <div className="flex justify-end">
-            <Button onClick={createComment}>{t("postComment")}</Button>
-          </div>
-        </div>
-
-        <div className="mt-6 grid gap-3">
-          {comments.length === 0 ? (
-            <p className="border border-dashed border-stone-300 p-4 text-sm text-neutral-600">
-              {t("emptyComments")}
-            </p>
-          ) : (
-            comments.map((comment) => (
-              <article
-                className="border border-stone-200 bg-[#fffdf8] p-3"
-                key={comment.id}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-black text-neutral-950">
-                      {comment.author_name}
-                    </p>
-                    <time className="text-xs font-bold text-neutral-500">
-                      {comment.created_at
-                        ? dayjs(comment.created_at).format("YYYY-MM-DD HH:mm")
-                        : "-"}
-                    </time>
-                  </div>
-                  {user ? (
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      onClick={() => deleteComment(comment.id)}
-                    >
-                      {t("delete")}
-                    </Button>
-                  ) : null}
-                </div>
-                <p className="mt-3 whitespace-pre-wrap leading-relaxed text-neutral-800">
-                  {comment.body}
-                </p>
-              </article>
-            ))
-          )}
-        </div>
-      </section>
+      {showComments ? (
+        <CommentSection
+          commentBody={commentBody}
+          commentMessage={commentMessage}
+          commentName={commentName}
+          comments={comments}
+          user={user}
+          onBodyChange={setCommentBody}
+          onCommentDelete={deleteComment}
+          onNameChange={setCommentName}
+          onSubmit={createComment}
+        />
+      ) : null}
     </main>
+  );
+}
+
+function CommentSection({
+  commentBody,
+  commentMessage,
+  commentName,
+  comments,
+  user,
+  onBodyChange,
+  onCommentDelete,
+  onNameChange,
+  onSubmit,
+}: {
+  commentBody: string;
+  commentMessage: string;
+  commentName: string;
+  comments: LearningComment[];
+  user: User | null;
+  onBodyChange: (value: string) => void;
+  onCommentDelete: (commentId: string) => void;
+  onNameChange: (value: string) => void;
+  onSubmit: () => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <section className="mt-6 border border-neutral-950 bg-white p-4 shadow-[6px_6px_0_#1a1a1a] sm:p-5">
+      <div className="mb-4">
+        <h2 className="text-2xl font-black text-neutral-950">
+          {t("comments")}
+        </h2>
+        <p className="text-sm text-neutral-600">{t("heroBody")}</p>
+      </div>
+
+      <div className="grid gap-3">
+        <Input
+          value={commentName}
+          onChange={(event) => onNameChange(event.target.value)}
+          placeholder={t("name")}
+          maxLength={40}
+        />
+        <Textarea
+          className="min-h-24"
+          value={commentBody}
+          onChange={(event) => onBodyChange(event.target.value)}
+          placeholder={t("writeComment")}
+          maxLength={1000}
+        />
+        {commentMessage ? (
+          <p className="text-sm font-bold text-red-700">{commentMessage}</p>
+        ) : null}
+        <div className="flex justify-end">
+          <Button onClick={onSubmit}>{t("postComment")}</Button>
+        </div>
+      </div>
+
+      <div className="mt-6 grid gap-3">
+        {comments.length === 0 ? (
+          <p className="border border-dashed border-stone-300 p-4 text-sm text-neutral-600">
+            {t("emptyComments")}
+          </p>
+        ) : (
+          comments.map((comment) => (
+            <article
+              className="border border-stone-200 bg-[#fffdf8] p-3"
+              key={comment.id}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-black text-neutral-950">
+                    {comment.author_name}
+                  </p>
+                  <time className="text-xs font-bold text-neutral-500">
+                    {comment.created_at
+                      ? dayjs(comment.created_at).format("YYYY-MM-DD HH:mm")
+                      : "-"}
+                  </time>
+                </div>
+                {user ? (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={() => onCommentDelete(comment.id)}
+                  >
+                    {t("delete")}
+                  </Button>
+                ) : null}
+              </div>
+              <p className="mt-3 whitespace-pre-wrap leading-relaxed text-neutral-800">
+                {comment.body}
+              </p>
+            </article>
+          ))
+        )}
+      </div>
+    </section>
   );
 }
 

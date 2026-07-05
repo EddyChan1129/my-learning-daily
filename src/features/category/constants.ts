@@ -4,12 +4,35 @@ export const categoryImageById: Record<string, string> = {
   leetcode: "/images/category/leetcode.png",
   javascript: "/images/category/js.png",
   springboot: "/images/category/springboot.png",
+  "spring boot": "/images/category/springboot.png",
   "interview question": "/images/category/inter_quest.png",
   security: "/images/category/security.png",
   networking: "/images/category/net.png",
   "working issues": "/images/category/wk_is.png",
   other: "/images/category/other.png",
 };
+
+export function categoryImageForId(id?: string | null) {
+  if (!id) return "";
+
+  return categoryImageById[id] ?? categoryImageById[id.toLowerCase()] ?? "";
+}
+
+export function learningCardImage(card: {
+  category?: string | null;
+  image_url?: string | null;
+  sub_field?: string | null;
+}) {
+  const imageUrl = card.image_url?.trim();
+
+  if (imageUrl && !imageUrl.endsWith("/no_img.png")) return imageUrl;
+
+  return (
+    categoryImageForId(card.sub_field) ||
+    categoryImageForId(card.category) ||
+    categoryImageById.other
+  );
+}
 
 export const defaultLearningCategories: LearningCategory[] = [
   {

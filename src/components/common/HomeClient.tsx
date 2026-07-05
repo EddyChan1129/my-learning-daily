@@ -411,7 +411,7 @@ function CategoryPlaylistBox({
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              className="h-full w-full object-cover object-top"
+              className="h-full w-full object-contain"
               src={imageUrl}
               alt=""
             />
