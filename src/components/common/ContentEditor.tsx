@@ -230,7 +230,7 @@ export function ContentEditor({
 
   function handleBeforeInput(event: FormEvent<HTMLDivElement>) {
     const inputEvent = event.nativeEvent as InputEvent;
-    if (!inputEvent.inputType.startsWith("delete")) return;
+    if (!inputEvent.inputType?.startsWith("delete")) return;
 
     const direction =
       inputEvent.inputType === "deleteContentForward" ? "forward" : "backward";
