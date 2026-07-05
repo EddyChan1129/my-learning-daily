@@ -35,6 +35,7 @@ export function HomeClient() {
     readableLearningId([], dayjs().format("YYYY-MM-DD")),
   );
   const [currentProfile, setCurrentProfile] = useState<Profile | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   useEffect(() => {
     loadCards();
@@ -123,6 +124,7 @@ export function HomeClient() {
     if (error) throw error;
 
     setShowForm(false);
+    setSelectedCategory(null);
     setDraftUploadId(
       readableLearningId(cards, dayjs().format("YYYY-MM-DD")),
     );
@@ -146,6 +148,10 @@ export function HomeClient() {
   const ownerName = currentProfile?.username ?? user?.email?.split("@")[0];
   const wallTitle = ownerName ? `${ownerName}讀書生活` : t("dailyWall");
   const wallSubtitle = ownerName ? `${ownerName} Study Life` : "Study Life";
+  const categoryPlaylists = buildCategoryPlaylists(cards);
+  const visibleCards = selectedCategory
+    ? cards.filter((card) => card.category === selectedCategory)
+    : cards;
 
   return (
     <main className="relative mx-auto w-[min(1160px,calc(100%_-_28px))] border-x border-stone-300 px-4 pb-16 pt-24 shadow-[inset_1px_0_0_rgba(255,255,255,0.75),inset_-1px_0_0_rgba(255,255,255,0.75)] sm:w-[min(1160px,calc(100%_-_40px))] sm:px-8 sm:pt-28">
@@ -214,23 +220,144 @@ export function HomeClient() {
         </section>
       ) : null}
 
-      <div className="mb-4 flex items-end justify-between gap-4 border-b border-stone-300 pb-3">
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-4 border-b border-stone-300 pb-3">
         <div>
           <h2 className="text-2xl font-black tracking-normal text-neutral-950">
-            {t("learningWall")}
+            {selectedCategory ?? t("learningWall")}
           </h2>
-          <p className="text-sm text-neutral-600">{t("heroBody")}</p>
+          <p className="text-sm text-neutral-600">
+            {selectedCategory
+              ? `${visibleCards.length} learning card${visibleCards.length === 1 ? "" : "s"}`
+              : t("heroBody")}
+          </p>
         </div>
+        {selectedCategory ? (
+          <Button variant="secondary" onClick={() => setSelectedCategory(null)}>
+            All categories
+          </Button>
+        ) : null}
       </div>
 
       {loading ? <LoadingGrid /> : null}
-      {!loading && cards.length > 0 ? (
-        <LearningCardGrid cards={cards} profiles={profiles} />
+      {!loading && cards.length > 0 && !selectedCategory ? (
+        <CategoryPlaylistGrid
+          playlists={categoryPlaylists}
+          onSelect={setSelectedCategory}
+        />
+      ) : null}
+      {!loading && selectedCategory ? (
+        <LearningCardGrid cards={visibleCards} profiles={profiles} />
       ) : null}
       {!loading && cards.length === 0 && !message ? (
         <EmptyState canCreate={Boolean(user)} />
       ) : null}
     </main>
+  );
+}
+
+type CategoryPlaylist = {
+  category: string;
+  cards: LearningCard[];
+};
+
+function buildCategoryPlaylists(cards: LearningCard[]): CategoryPlaylist[] {
+  const playlists = new Map<string, LearningCard[]>();
+
+  for (const card of cards) {
+    playlists.set(card.category, [
+      ...(playlists.get(card.category) ?? []),
+      card,
+    ]);
+  }
+
+  return Array.from(playlists, ([category, categoryCards]) => ({
+    category,
+    cards: categoryCards,
+  })).sort((left, right) => right.cards.length - left.cards.length);
+}
+
+function CategoryPlaylistGrid({
+  playlists,
+  onSelect,
+}: {
+  playlists: CategoryPlaylist[];
+  onSelect: (category: string) => void;
+}) {
+  return (
+    <section
+      className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+      aria-label="Learning categories"
+    >
+      {playlists.map((playlist) => (
+        <CategoryPlaylistBox
+          key={playlist.category}
+          playlist={playlist}
+          onSelect={onSelect}
+        />
+      ))}
+    </section>
+  );
+}
+
+function CategoryPlaylistBox({
+  playlist,
+  onSelect,
+}: {
+  playlist: CategoryPlaylist;
+  onSelect: (category: string) => void;
+}) {
+  const coverCards = playlist.cards.slice(0, 3);
+  const latestCard = playlist.cards[0];
+
+  return (
+    <button
+      className="group text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral-950"
+      type="button"
+      onClick={() => onSelect(playlist.category)}
+    >
+      <div className="relative h-56 overflow-hidden border border-stone-300 bg-stone-200 shadow-[0_10px_28px_rgba(26,26,26,0.06)] transition group-hover:-translate-y-1 group-hover:border-neutral-950 group-hover:shadow-[6px_6px_0_#1a1a1a] motion-reduce:transition-none motion-reduce:group-hover:translate-y-0 sm:h-60">
+        {coverCards.map((card, index) => (
+          <div
+            className="absolute inset-y-0 overflow-hidden border-l border-white/50 bg-[#eef4ee]"
+            key={card.id}
+            style={{
+              left: `${index * 16}%`,
+              right: `${(coverCards.length - index - 1) * 8}%`,
+              zIndex: index + 1,
+            }}
+          >
+            {card.image_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                className="h-full w-full object-cover object-top"
+                src={card.image_url}
+                alt=""
+              />
+            ) : (
+              <div className="grid h-full place-items-center text-5xl font-black text-emerald-900">
+                {card.category.slice(0, 2).toUpperCase()}
+              </div>
+            )}
+          </div>
+        ))}
+        <div className="absolute bottom-3 right-3 z-10 border border-neutral-950 bg-neutral-950/85 px-3 py-1 text-sm font-black text-white">
+          {playlist.cards.length} cards
+        </div>
+      </div>
+      <div className="mt-3">
+        <h3 className="text-2xl font-black leading-none text-neutral-950">
+          {playlist.category}
+        </h3>
+        <p className="mt-1 text-sm font-bold text-neutral-500">
+          {latestCard?.learned_date
+            ? `Updated ${dayjs(latestCard.learned_date).format("YYYY-MM-DD")}`
+            : "View category"}
+        </p>
+        <p className="mt-1 text-sm font-black text-neutral-700">
+          View learning cards
+        </p>
+      </div>
+    </button>
   );
 }
 
