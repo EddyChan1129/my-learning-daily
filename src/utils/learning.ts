@@ -3,7 +3,7 @@ import type {
   LearningCard,
   LearningCardInput,
 } from "@/types/learning";
-import { contentHasImage, contentText } from "@/utils/content";
+import { contentText } from "@/utils/content";
 
 export const learningCardSchema = z.object({
   title: z.string().trim().min(1, "Title is required."),
@@ -57,9 +57,6 @@ export function validateCard(input: LearningCardInput) {
         .refine((value) => contentText(value).trim().length > 0, {
           message: "Content is required.",
         })
-        .refine((value) => contentHasImage(value) || Boolean(input.image_url), {
-          message: "At least one image is required.",
-        }),
     })
     .safeParse(input);
   return result.success ? "" : result.error.issues[0]?.message ?? "Invalid form.";

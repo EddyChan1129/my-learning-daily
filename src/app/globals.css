@@ -37,26 +37,27 @@
 
 @layer components {
   .learning-content p:has(.content-image) {
-    display: inline-block;
-    margin: 1rem 1rem 1rem 0;
-    vertical-align: top;
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    margin: 1.5rem 0;
   }
 
   .learning-content .content-image {
     display: block;
     width: auto;
-    max-width: min(100%, 28rem);
-    max-height: 22rem;
+    max-width: 100%;
     object-fit: contain;
     border-radius: 0.5rem;
+    cursor: zoom-in;
   }
 
   .learning-content .emoji-image {
     display: inline-block;
-    width: 2.25rem;
-    height: 2.25rem;
+    width: 1.45em;
+    height: 1.45em;
     object-fit: contain;
-    vertical-align: -0.55rem;
+    vertical-align: -0.35em;
   }
 
   .learning-content pre {
@@ -110,8 +111,7 @@
 
   @media (max-width: 640px) {
     .learning-content p:has(.content-image) {
-      display: block;
-      margin-right: 0;
+      margin: 1.25rem 0;
     }
 
     .learning-content .content-image {

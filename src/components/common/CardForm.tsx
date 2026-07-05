@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import type { LearningCategory } from "@/features/category/types";
 import type { LearningCardInput } from "@/types/learning";
-import { contentSummary } from "@/utils/content";
+import { contentSummary, firstContentImageUrl } from "@/utils/content";
 import { validateCard } from "@/utils/learning";
 
 type Props = {
@@ -47,9 +47,14 @@ export function CardForm({
     setError("");
 
     try {
-      await onSubmit({
+      const nextValue = {
         ...value,
+        image_url: firstContentImageUrl(value.content),
         summary: contentSummary(value.content),
+      };
+
+      await onSubmit({
+        ...nextValue,
       });
     } catch (submitError) {
       setError(

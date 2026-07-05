@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { MouseEvent, useEffect, useMemo, useRef, useState } from "react";
 import hljs from "highlight.js/lib/core";
 import bash from "highlight.js/lib/languages/bash";
 import css from "highlight.js/lib/languages/css";
@@ -8,6 +8,7 @@ import javascript from "highlight.js/lib/languages/javascript";
 import json from "highlight.js/lib/languages/json";
 import typescript from "highlight.js/lib/languages/typescript";
 import xml from "highlight.js/lib/languages/xml";
+import { Button } from "@/components/ui/button";
 import { sanitizeContent } from "@/utils/content";
 
 let highlighterReady = false;
@@ -33,6 +34,7 @@ type Props = {
 
 export function LearningContent({ html, className = "" }: Props) {
   const contentRef = useRef<HTMLDivElement>(null);
+  const [previewImage, setPreviewImage] = useState("");
   const sanitizedHtml = useMemo(() => sanitizeContent(html), [html]);
 
   useEffect(() => {
@@ -45,11 +47,58 @@ export function LearningContent({ html, className = "" }: Props) {
       });
   }, [sanitizedHtml]);
 
+  useEffect(() => {
+    if (!previewImage) return;
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setPreviewImage("");
+    }
+
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [previewImage]);
+
+  function openImagePreview(event: MouseEvent<HTMLDivElement>) {
+    const target = event.target;
+    if (!(target instanceof HTMLImageElement)) return;
+    if (!target.classList.contains("content-image")) return;
+
+    setPreviewImage(target.currentSrc || target.src);
+  }
+
   return (
-    <div
-      ref={contentRef}
-      className={`learning-content ${className}`}
-      dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
-    />
+    <>
+      <div
+        ref={contentRef}
+        className={`learning-content ${className}`}
+        dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
+        onClick={openImagePreview}
+      />
+      {previewImage ? (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-neutral-950/85 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Image preview"
+          onClick={() => setPreviewImage("")}
+        >
+          <Button
+            className="absolute right-4 top-4"
+            type="button"
+            variant="secondary"
+            onClick={() => setPreviewImage("")}
+          >
+            Close
+          </Button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            alt=""
+            className="max-h-[calc(100vh-96px)] max-w-[min(100%,1200px)] rounded-lg bg-white object-contain"
+            src={previewImage}
+            onClick={(event) => event.stopPropagation()}
+          />
+        </div>
+      ) : null}
+    </>
   );
 }

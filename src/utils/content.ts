@@ -1,3 +1,5 @@
+const CLOUDINARY_EMOJI_PATTERN = /\/image\/upload\/(?:v\d+\/)?(smile|sad|omg|think)(?:\.[a-z]+)?(?:[?#].*)?$/i;
+
 export function sanitizeContent(html: string) {
   if (typeof window === "undefined") return html;
 
@@ -21,10 +23,14 @@ export function sanitizeContent(html: string) {
     }
 
     Array.from(node.attributes).forEach((attr) => {
-      if (
-        node.tagName === "IMG" &&
-        ["alt", "class", "src"].includes(attr.name)
-      ) {
+      if (node.tagName === "IMG" && attr.name === "src") {
+        if (CLOUDINARY_EMOJI_PATTERN.test(attr.value)) {
+          node.setAttribute("class", "emoji-image");
+        }
+        return;
+      }
+
+      if (node.tagName === "IMG" && ["alt", "class"].includes(attr.name)) {
         return;
       }
 
@@ -56,7 +62,16 @@ export function contentText(html: string) {
 }
 
 export function contentHasImage(html: string) {
-  return /<img\b/i.test(html);
+  return Boolean(firstContentImageUrl(html));
+}
+
+export function firstContentImageUrl(html: string) {
+  if (typeof window === "undefined") return null;
+
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  const image = doc.body.querySelector<HTMLImageElement>("img.content-image");
+
+  return image?.getAttribute("src") ?? null;
 }
 
 export function contentSummary(html: string) {

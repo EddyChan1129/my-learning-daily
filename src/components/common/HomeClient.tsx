@@ -371,18 +371,12 @@ function CategoryPlaylistBox({
               zIndex: index + 1,
             }}
           >
-            {card.image_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                className="h-full w-full object-cover object-top"
-                src={card.image_url}
-                alt=""
-              />
-            ) : (
-              <div className="grid h-full place-items-center text-5xl font-black text-emerald-900">
-                {card.category.slice(0, 2).toUpperCase()}
-              </div>
-            )}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className="h-full w-full object-cover object-top"
+              src={card.image_url ?? "/no_img.png"}
+              alt=""
+            />
           </div>
         ))}
         <div className="absolute bottom-3 right-3 z-10 border border-neutral-950 bg-neutral-950/85 px-3 py-1 text-sm font-black text-white">
@@ -436,22 +430,20 @@ function LearningCardLink({
   card: LearningCard;
   profile?: Profile;
 }) {
+  const imageUrl = card.image_url ?? "/no_img.png";
+
   return (
     <Link
       className="group overflow-hidden border border-stone-300 bg-white shadow-[0_10px_28px_rgba(26,26,26,0.05)] transition hover:-translate-y-1 hover:border-neutral-950 hover:shadow-[6px_6px_0_#1a1a1a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
       href={`/learning/${card.cloud_id ?? card.id}`}
     >
       <div className="grid h-64 place-items-center overflow-hidden border-b border-stone-200 bg-[#eef4ee] text-5xl font-black text-emerald-900 sm:h-72 lg:h-64">
-        {card.image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            className="h-full w-full object-cover object-top transition duration-300 group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
-            src={card.image_url}
-            alt=""
-          />
-        ) : (
-          <span>{card.category.slice(0, 2).toUpperCase()}</span>
-        )}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          className="h-full w-full object-cover object-top transition duration-300 group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+          src={imageUrl}
+          alt=""
+        />
       </div>
       <div className="p-4 sm:p-5">
         <div className="mb-3 flex items-center justify-between gap-3 text-xs font-black uppercase text-neutral-500">
