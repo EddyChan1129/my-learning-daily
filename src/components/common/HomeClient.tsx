@@ -10,7 +10,10 @@ import {
   getCurrentUser,
   setCurrentUserCache,
 } from "@/features/auth/services/auth.service";
-import { categoryImageById } from "@/features/category/constants";
+import {
+  categoryImageForId,
+  learningCardImage,
+} from "@/features/category/constants";
 import { useCategories } from "@/features/category/hooks/useCategories";
 import {
   getLearningCards,
@@ -346,7 +349,7 @@ function buildCategoryPlaylists(cards: LearningCard[]): CategoryPlaylist[] {
 
   return Array.from(playlists, ([category, categoryCards]) => ({
     category,
-    categoryImage: categoryImageById[category] ?? "",
+    categoryImage: categoryImageForId(category),
     cards: categoryCards,
   })).sort((left, right) => right.cards.length - left.cards.length);
 }
@@ -361,7 +364,7 @@ function buildSubFieldPlaylists(cards: LearningCard[]): CategoryPlaylist[] {
 
   return Array.from(playlists, ([category, categoryCards]) => ({
     category,
-    categoryImage: categoryImageById[category] ?? "",
+    categoryImage: categoryImageForId(category),
     cards: categoryCards,
   })).sort((left, right) => right.cards.length - left.cards.length);
 }
@@ -431,7 +434,7 @@ function CategoryPlaylistBox({
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 className="h-full w-full object-cover object-top"
-                src={card.image_url ?? "/no_img.png"}
+                src={learningCardImage(card)}
                 alt=""
               />
             </div>
@@ -488,7 +491,7 @@ function LearningCardLink({
   card: LearningCard;
   profile?: Profile;
 }) {
-  const imageUrl = card.image_url ?? "/no_img.png";
+  const imageUrl = learningCardImage(card);
 
   return (
     <Link
