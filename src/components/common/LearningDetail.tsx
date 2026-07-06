@@ -293,7 +293,7 @@ export function LearningDetail({ slug }: { slug: string }) {
   };
 
   return (
-    <main className="mx-auto w-[min(820px,calc(100%-32px))] py-8 sm:py-12">
+    <main className="mx-auto w-[min(820px,calc(100%-32px))] pb-12 pt-32 sm:pb-12 sm:pt-36">
       {deleting ? <BlockingOverlay message={t("deletingDoNotLeave")} /> : null}
 
       {editing ? (
@@ -414,7 +414,7 @@ function CommentSection({
         <h2 className="text-2xl font-black text-neutral-950">
           {t("comments")}
         </h2>
-        <p className="text-sm text-neutral-600">{t("heroBody")}</p>
+        <p className="text-sm text-neutral-600">{t("commentsBody")}</p>
       </div>
 
       <div className="grid gap-3">

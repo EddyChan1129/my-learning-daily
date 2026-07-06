@@ -196,15 +196,15 @@ export function HomeClient({ scope = "all" }: { scope?: HomeScope }) {
     : cards;
 
   return (
-    <main className="relative mx-auto w-[min(1160px,calc(100%-28px))] border-x border-stone-300 px-4 pb-16 pt-24 shadow-[inset_1px_0_0_rgba(255,255,255,0.75),inset_-1px_0_0_rgba(255,255,255,0.75)] sm:w-[min(1160px,calc(100%-40px))] sm:px-8 sm:pt-28">
-      <section className="grid gap-6 pb-8 sm:pb-12 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end">
+    <main className="relative mx-auto w-[min(1160px,calc(100%-28px))] border-x border-stone-300 px-4 pb-16 pt-32 shadow-[inset_1px_0_0_rgba(255,255,255,0.75),inset_-1px_0_0_rgba(255,255,255,0.75)] sm:w-[min(1160px,calc(100%-40px))] sm:px-8 sm:pt-36">
+      <section className="grid gap-6 pb-8 sm:pb-12 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-center">
         <div className="border-l border-neutral-950 pl-4 sm:pl-6">
           <p className="mb-4 text-sm font-black text-emerald-800">
             {wallEyebrow}
           </p>
-          <h1 className="max-w-3xl text-[clamp(40px,13vw,92px)] font-black leading-[0.88] tracking-normal text-neutral-950">
-            {t("dailyWall")}
-            <span className="mt-2 block text-[0.38em] leading-none text-neutral-500">
+          <h1 className="max-w-4xl text-[clamp(40px,9vw,88px)] font-black leading-[0.94] tracking-normal text-neutral-950">
+            <span className="block">{t("dailyWall")}</span>
+            <span className="mt-4 block max-w-2xl text-xl leading-relaxed text-neutral-500 sm:text-2xl">
               {t("dailyTagline")}
             </span>
           </h1>
@@ -254,7 +254,7 @@ export function HomeClient({ scope = "all" }: { scope?: HomeScope }) {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="font-black text-neutral-950">{t("addCard")}</p>
-              <p className="text-sm text-neutral-600">{t("heroBody")}</p>
+              <p className="text-sm text-neutral-600">{t("addCardBody")}</p>
             </div>
             <Button onClick={toggleForm}>
               {showForm ? t("close") : t("newCard")}
@@ -283,7 +283,7 @@ export function HomeClient({ scope = "all" }: { scope?: HomeScope }) {
           <p className="text-sm text-neutral-600">
             {selectedCategory
               ? `${visibleCards.length} learning card${visibleCards.length === 1 ? "" : "s"}`
-              : t("heroBody")}
+              : t("learningWallBody")}
           </p>
         </div>
         {selectedCategory ? (
@@ -575,7 +575,7 @@ function EmptyState({ canCreate }: { canCreate: boolean }) {
         {t("emptyWall")}
       </p>
       <p className="mt-2 max-w-xl leading-relaxed">
-        {t("heroBody")}
+        {t("learningWallBody")}
       </p>
       {!canCreate ? (
         <Link

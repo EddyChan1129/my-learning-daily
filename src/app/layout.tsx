@@ -7,8 +7,8 @@ import { Navbar } from "@/components/layout/Navbar";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Day One / One Day",
-  description: "A daily learning journal for recording progress.",
+  title: "！每日一知 / knowbit",
+  description: "每日做小小改變，記低小小進步。",
 };
 
 export default function RootLayout({

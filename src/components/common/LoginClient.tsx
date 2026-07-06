@@ -74,7 +74,7 @@ export function LoginClient() {
           {t("back")}
         </Link>
         <p className="mb-2 text-sm font-bold uppercase text-neutral-600">
-          Day One / One Day
+          {t("dailyWall")}
         </p>
         <h1 className="mb-6 text-4xl font-black leading-none text-neutral-950">
           {mode === "login" ? t("signInTitle") : t("signUpTitle")}

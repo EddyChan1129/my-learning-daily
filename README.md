@@ -1,4 +1,4 @@
-# Day One / One Day
+# ！每日一知 / knowbit
 
 Daily learning journal built with Next.js and Supabase.
 
