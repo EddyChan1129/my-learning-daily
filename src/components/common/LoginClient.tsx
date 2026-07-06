@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { KnowbitLogo } from "@/components/common/KnowbitLogo";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -73,9 +74,12 @@ export function LoginClient() {
         >
           {t("back")}
         </Link>
-        <p className="mb-2 text-sm font-bold uppercase text-neutral-600">
-          {t("dailyWall")}
-        </p>
+        <div className="mb-5">
+          <KnowbitLogo className="h-16 w-56" />
+          <p className="mt-2 text-sm font-bold uppercase text-neutral-600">
+            {t("dailyWall")}
+          </p>
+        </div>
         <h1 className="mb-6 text-4xl font-black leading-none text-neutral-950">
           {mode === "login" ? t("signInTitle") : t("signUpTitle")}
         </h1>

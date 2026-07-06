@@ -197,14 +197,14 @@ export function HomeClient({ scope = "all" }: { scope?: HomeScope }) {
 
   return (
     <main className="relative mx-auto w-[min(1160px,calc(100%-28px))] border-x border-stone-300 px-4 pb-16 pt-32 shadow-[inset_1px_0_0_rgba(255,255,255,0.75),inset_-1px_0_0_rgba(255,255,255,0.75)] sm:w-[min(1160px,calc(100%-40px))] sm:px-8 sm:pt-36">
-      <section className="grid gap-6 pb-8 sm:pb-12 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-center">
-        <div className="border-l border-neutral-950 pl-4 sm:pl-6">
+      <section className="grid gap-8 pb-8 sm:pb-12 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-center">
+        <div className="border-l-2 border-[#f3b51b] pl-4 sm:pl-6">
           <p className="mb-4 text-sm font-black text-emerald-800">
             {wallEyebrow}
           </p>
-          <h1 className="max-w-4xl text-[clamp(40px,9vw,88px)] font-black leading-[0.94] tracking-normal text-neutral-950">
+          <h1 className="max-w-4xl text-[clamp(48px,9vw,96px)] font-black leading-[0.9] tracking-normal text-neutral-950">
             <span className="block">{t("dailyWall")}</span>
-            <span className="mt-4 block max-w-2xl text-xl leading-relaxed text-neutral-500 sm:text-2xl">
+            <span className="mt-5 block max-w-2xl text-xl leading-relaxed text-neutral-600 sm:text-2xl">
               {t("dailyTagline")}
             </span>
           </h1>
@@ -213,24 +213,39 @@ export function HomeClient({ scope = "all" }: { scope?: HomeScope }) {
           </p>
         </div>
 
-        <div className="grid grid-cols-3 border border-stone-300 bg-white text-neutral-950 shadow-[6px_6px_0_rgba(26,26,26,0.88)] lg:grid-cols-1">
-          <div className="border-r border-stone-300 p-3 lg:border-b lg:border-r-0">
-            <p className="text-xs font-black uppercase text-neutral-500">
-              {t("cards")}
+        <div className="border border-stone-300 bg-white p-4 text-neutral-950 shadow-[8px_8px_0_rgba(26,26,26,0.88)] sm:p-5">
+          <div className="border-l border-neutral-950 pl-4">
+            <p className="text-sm font-black uppercase text-emerald-800">
+              {t("learningWall")}
             </p>
-            <p className="mt-1 text-3xl font-black">{cards.length}</p>
+            <p className="mt-3 text-lg font-black leading-relaxed text-neutral-800">
+              {t("dailyPrompt")}
+            </p>
           </div>
-          <div className="border-r border-stone-300 p-3 lg:border-b lg:border-r-0">
-            <p className="text-xs font-black uppercase text-neutral-500">
-              {t("people")}
-            </p>
-            <p className="mt-1 text-3xl font-black">{contributorCount}</p>
+          <div className="mt-6 grid grid-cols-3 border border-stone-200 bg-[#fffaf0]">
+            <div className="border-r border-stone-200 p-3">
+              <p className="text-xs font-black uppercase text-neutral-500">
+                {t("cards")}
+              </p>
+              <p className="mt-1 text-3xl font-black">{cards.length}</p>
+            </div>
+            <div className="border-r border-stone-200 p-3">
+              <p className="text-xs font-black uppercase text-neutral-500">
+                {t("people")}
+              </p>
+              <p className="mt-1 text-3xl font-black">{contributorCount}</p>
+            </div>
+            <div className="p-3">
+              <p className="text-xs font-black uppercase text-neutral-500">
+                {t("latest")}
+              </p>
+              <p className="mt-1 text-2xl font-black">{latestDate}</p>
+            </div>
           </div>
-          <div className="p-3">
-            <p className="text-xs font-black uppercase text-neutral-500">
-              {t("latest")}
+          <div className="mt-5 border-t border-stone-200 pt-4">
+            <p className="text-sm font-bold leading-relaxed text-neutral-500">
+              {t("learningWallBody")}
             </p>
-            <p className="mt-1 text-2xl font-black">{latestDate}</p>
           </div>
         </div>
       </section>

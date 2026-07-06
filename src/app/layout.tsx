@@ -7,8 +7,12 @@ import { Navbar } from "@/components/layout/Navbar";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "！每日一知 / knowbit",
+  title: "KnowBit",
   description: "每日做小小改變，記低小小進步。",
+  icons: {
+    icon: "/images/logo/logo.png",
+    apple: "/images/logo/logo.png",
+  },
 };
 
 export default function RootLayout({

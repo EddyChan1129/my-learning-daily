@@ -20,7 +20,7 @@ export const resources = {
             createAccount: "建立帳戶",
             dailyPrompt: "每日做小小改變，記低小小進步。",
             dailyTagline: "所謂瘋子，就是重複做同樣的事情，卻期待會出現不同的結果。",
-            dailyWall: "！每日一知",
+            dailyWall: "每日一知",
             dateLearned: "學習日期",
             delete: "刪除",
             description: "個人介紹",
@@ -30,10 +30,25 @@ export const resources = {
             emptyComments: "暫時未有留言。",
             emptyWall: "第一張學習卡由這裡開始。",
             emoji: "表情",
-            footer: "每日做小小改變，做出小小記錄，令自己進步。",
+            footer: "由一張學習卡開始，慢慢砌出自己的知識路線。",
+            footerBrowse: "分類方向",
+            footerContactBody:
+                "有想法、問題或者合作方向，可以先留低訊息。寄信功能之後會再接上。",
+            footerContactContentPlaceholder: "寫低你想講的內容...",
+            footerContactEyebrow: "有事想講？",
+            footerContactNote: "這裡先保留訊息格式，之後會接 send email function。",
+            footerContactPending: "Submit 會先保存表單體驗，寄 email 功能稍後實作。",
+            footerContactSubmitted: "收到，之後接 email service 就會正式寄出。",
+            footerContactTitlePlaceholder: "例如：功能建議 / 問題回報",
+            footerCopyright: "Copyright © 2026 by eddy",
+            footerGuide: "今日可以記低",
+            footerPromptOne: "今日學到的一個概念。",
+            footerPromptTwo: "一個你試過、卡住或解決到的位。",
+            footerPromptThree: "下一次想再深入一點的方向。",
+            footerSitemap: "站內入口",
             faq: "常見問題",
             findTutor: "尋找導師",
-            heroBody: "希望每個人都可以每日學一點、改一點、記低一點，慢慢感受自己正在進步。",
+            heroBody: "每一張學習卡，都是今天比昨天多知道的一點。",
             home: "首頁",
             language: "語言",
             large: "大字",
@@ -57,6 +72,7 @@ export const resources = {
             deletingDoNotLeave: "正在刪除學習卡，請不要離開。",
             signInTitle: "登入",
             signUpTitle: "註冊",
+            submit: "提交",
             title: "標題",
             tryAgain: "重試",
             uploadImage: "上載圖片",
@@ -68,7 +84,8 @@ export const resources = {
     en: {
         translation: {
             addCard: "Add today's card",
-            addCardBody: "Write down one thing you learned today so tomorrow can see the progress.",
+            addCardBody:
+                "Write down one thing you learned today so tomorrow can see the progress.",
             back: "Back",
             bold: "Bold",
             cancel: "Cancel",
@@ -76,13 +93,15 @@ export const resources = {
             category: "Category",
             close: "Close",
             comments: "Comments",
-            commentsBody: "Leave a response or add context to someone else's learning card.",
+            commentsBody:
+                "Leave a response or add context to someone else's learning card.",
             contactUs: "Contact us",
             content: "Content",
             create: "Create",
             createAccount: "Create account",
             dailyPrompt: "Make one small change. Record one small bit.",
-            dailyTagline: "Insanity is doing the same thing over and over and expecting different results.",
+            dailyTagline:
+                "Insanity is doing the same thing over and over and expecting different results.",
             dailyWall: "knowbit",
             dateLearned: "Date learned",
             delete: "Delete",
@@ -93,16 +112,36 @@ export const resources = {
             emptyComments: "No comments yet.",
             emptyWall: "Your first learning card starts here.",
             emoji: "Emoji",
-            footer: "Small changes and small records make progress visible.",
+            footer: "Start with one learning card and build your own knowledge path.",
+            footerBrowse: "Topic paths",
+            footerContactBody:
+                "Share an idea, report an issue, or leave a collaboration note. Email delivery will be wired up later.",
+            footerContactContentPlaceholder: "Write your message...",
+            footerContactEyebrow: "Need to reach out?",
+            footerContactNote:
+                "This keeps the message format ready for the future send email function.",
+            footerContactPending:
+                "Submit keeps the form experience ready. Email delivery is coming later.",
+            footerContactSubmitted:
+                "Got it. This will send once the email service is connected.",
+            footerContactTitlePlaceholder: "Example: Feature idea / issue report",
+            footerCopyright: "Copyright © 2026 by eddy",
+            footerGuide: "What to record",
+            footerPromptOne: "One concept you learned today.",
+            footerPromptTwo: "One point you tried, got stuck on, or solved.",
+            footerPromptThree: "One direction to revisit next time.",
+            footerSitemap: "Sitemap",
             faq: "FAQ",
             findTutor: "Find tutor",
-            heroBody: "Learn a little, change a little, and write down one bit each day so progress has somewhere to show up.",
+            heroBody:
+                "Each learning card is one bit you know today that you did not know yesterday.",
             home: "Home",
             language: "Language",
             large: "Large",
             latest: "Latest",
             learningWall: "Learning wall",
-            learningWallBody: "Browse your cards by category and see what you are building over time.",
+            learningWallBody:
+                "Browse your cards by category and see what you are building over time.",
             login: "Sign in",
             logout: "Sign out",
             myLearning: "My learning",
@@ -120,6 +159,7 @@ export const resources = {
             deletingDoNotLeave: "Deleting learning card. Please do not leave.",
             signInTitle: "Sign in",
             signUpTitle: "Register",
+            submit: "Submit",
             title: "Title",
             tryAgain: "Try again",
             uploadImage: "Upload image",
@@ -131,7 +171,19 @@ export const resources = {
 } as const
 
 export function initI18n() {
-    if (i18next.isInitialized) return i18next
+    if (i18next.isInitialized) {
+        Object.entries(resources).forEach(([lng, resource]) => {
+            i18next.addResourceBundle(
+                lng,
+                "translation",
+                resource.translation,
+                true,
+                true,
+            )
+        })
+
+        return i18next
+    }
 
     i18next.use(initReactI18next).init({
         fallbackLng: "zh",
