@@ -10,7 +10,6 @@ const NAV_ITEMS = [
   { href: "/", labelKey: "home" },
   { href: "/my-learning", labelKey: "myLearning" },
   { href: "/contact-us", labelKey: "contactUs" },
-  { href: "/faq", labelKey: "faq" },
   { href: "/todo-list", labelKey: "todoList" },
 ];
 
@@ -20,7 +19,7 @@ export function Navbar() {
 
   return (
     <nav
-      className="fixed left-3 right-3 top-16 z-20 sm:left-1/2 sm:right-auto sm:top-4 sm:w-[min(1040px,calc(100%-40px))] sm:-translate-x-1/2"
+      className="fixed left-1/2 top-16 z-20 w-[min(1160px,calc(100%-28px))] -translate-x-1/2 sm:top-4 sm:w-[min(1160px,calc(100%-40px))]"
       aria-label="Primary navigation"
     >
       <div className="flex max-w-full items-center justify-between gap-3 overflow-x-auto rounded-[28px] border border-stone-200 bg-white/95 px-3 py-2 shadow-[0_16px_44px_rgba(26,26,26,0.12)] backdrop-blur">

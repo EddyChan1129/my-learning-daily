@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { AuthButton } from "@/components/layout/AuthButton";
 import { Footer } from "@/components/layout/Footer";
-import { I18nProvider } from "@/components/common/I18nProvider";
 import { LanguageSelect } from "@/components/layout/LanguageSelect";
 import { Navbar } from "@/components/layout/Navbar";
 import { PageTransition } from "@/components/common/PageTransition";
+import { AppProviders } from "@/app/providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -27,13 +27,13 @@ export default function RootLayout({
   return (
     <html lang="zh-Hant">
       <body>
-        <I18nProvider>
+        <AppProviders>
           <LanguageSelect />
           <Navbar />
           <AuthButton />
           <PageTransition>{children}</PageTransition>
           <Footer />
-        </I18nProvider>
+        </AppProviders>
       </body>
     </html>
   );

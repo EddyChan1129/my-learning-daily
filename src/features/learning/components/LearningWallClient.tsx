@@ -202,7 +202,7 @@ export function LearningWallClient({ scope = "all" }: { scope?: HomeScope }) {
     : cards;
 
   return (
-    <main className="relative mx-auto w-[min(1160px,calc(100%-28px))] border-x border-stone-300 px-4 pb-16 pt-32 shadow-[inset_1px_0_0_rgba(255,255,255,0.75),inset_-1px_0_0_rgba(255,255,255,0.75)] sm:w-[min(1160px,calc(100%-40px))] sm:px-8 sm:pt-36">
+    <main className="page-shell relative border-x border-stone-300 px-4 pb-16 pt-32 shadow-[inset_1px_0_0_rgba(255,255,255,0.75),inset_-1px_0_0_rgba(255,255,255,0.75)] sm:px-8 sm:pt-36">
       <section className="grid gap-8 pb-8 sm:pb-12 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-center">
         <div className="border-l-2 border-[#f3b51b] pl-4 sm:pl-6">
           <p className="mb-4 text-sm font-black text-emerald-800">

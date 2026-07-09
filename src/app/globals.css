@@ -36,6 +36,11 @@
 }
 
 @layer components {
+  .page-shell {
+    width: min(1160px, calc(100% - 28px));
+    margin-inline: auto;
+  }
+
   .page-transition {
     animation: page-reveal 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
     transform-origin: 50% 24px;
@@ -204,6 +209,12 @@
     .learning-content .content-image {
       height: 240px;
       max-width: 100%;
+    }
+  }
+
+  @media (min-width: 640px) {
+    .page-shell {
+      width: min(1160px, calc(100% - 40px));
     }
   }
 }

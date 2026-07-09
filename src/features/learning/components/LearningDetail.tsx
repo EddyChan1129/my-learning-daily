@@ -228,7 +228,7 @@ export function LearningDetail({ slug }: { slug: string }) {
 
   if (!supabase) {
     return (
-      <main className="mx-auto w-[min(820px,calc(100%-32px))] py-8 sm:py-12">
+      <main className="page-shell min-h-screen pb-12 pt-32 sm:pt-36">
         <Link className={buttonVariants({ variant: "secondary" })} href="/">
           {t("back")}
         </Link>
@@ -241,7 +241,7 @@ export function LearningDetail({ slug }: { slug: string }) {
 
   if (!card) {
     return (
-      <main className="mx-auto w-[min(820px,calc(100%-32px))] py-8 sm:py-12">
+      <main className="page-shell min-h-screen pb-12 pt-32 sm:pt-36">
         <Link className={buttonVariants({ variant: "secondary" })} href="/">
           {t("back")}
         </Link>
@@ -261,7 +261,7 @@ export function LearningDetail({ slug }: { slug: string }) {
   };
 
   return (
-    <main className="mx-auto w-[min(820px,calc(100%-32px))] pb-12 pt-32 sm:pb-12 sm:pt-36">
+    <main className="page-shell pb-12 pt-32 sm:pb-12 sm:pt-36">
       {deleting ? <BlockingOverlay message={t("deletingDoNotLeave")} /> : null}
 
       {editing ? (
