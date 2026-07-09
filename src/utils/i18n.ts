@@ -68,7 +68,8 @@ export const resources = {
             postComment: "送出留言",
             register: "註冊",
             removeImage: "移除圖片",
-            removeImageConfirm: "移除這張圖片？儲存學習卡後，圖片會從內容和 Cloudinary 刪除。",
+            removeImageConfirm:
+                "移除這張圖片？儲存學習卡後，圖片會從內容和 Cloudinary 刪除。",
             imageRemovedNotice: "圖片已移除。請儲存學習卡，系統會同步刪除舊圖片。",
             save: "儲存",
             saving: "儲存中...",
@@ -78,7 +79,7 @@ export const resources = {
             signUpTitle: "註冊",
             submit: "提交",
             title: "標題",
-            todoList: "todo list",
+            todoList: "待辦清單",
             tryAgain: "重試",
             uploadImage: "上載圖片",
             uploading: "上載中...",

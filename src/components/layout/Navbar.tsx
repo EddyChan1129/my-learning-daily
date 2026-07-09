@@ -10,8 +10,8 @@ const NAV_ITEMS = [
   { href: "/", labelKey: "home" },
   { href: "/my-learning", labelKey: "myLearning" },
   { href: "/contact-us", labelKey: "contactUs" },
-  { href: "/todo-list", labelKey: "todoList" },
   { href: "/faq", labelKey: "faq" },
+  { href: "/todo-list", labelKey: "todoList" },
 ];
 
 export function Navbar() {
