@@ -6,6 +6,7 @@ import {
   FormEvent,
   KeyboardEvent,
   MouseEvent,
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -46,28 +47,60 @@ export function ContentEditor({
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [showEmojis, setShowEmojis] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<HTMLImageElement | null>(null);
+
+  const prepareContentImages = useCallback(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    editor.querySelectorAll<HTMLImageElement>("img.content-image").forEach((image) => {
+      image.contentEditable = "false";
+      image.draggable = false;
+      image.tabIndex = 0;
+
+      let frame = image.closest<HTMLElement>("[data-content-image-frame]");
+      if (!frame) {
+        frame = document.createElement("span");
+        frame.dataset.contentImageFrame = "true";
+        frame.contentEditable = "false";
+        image.parentNode?.insertBefore(frame, image);
+        frame.append(image);
+      }
+
+      if (frame.querySelector("[data-remove-content-image]")) return;
+
+      const removeButton = document.createElement("button");
+      removeButton.type = "button";
+      removeButton.className = "content-image-remove";
+      removeButton.dataset.removeContentImage = "true";
+      removeButton.setAttribute("aria-label", t("removeImage"));
+      removeButton.textContent = "-";
+      frame.append(removeButton);
+    });
+  }, [t]);
 
   useEffect(() => {
     if (editorRef.current && document.activeElement !== editorRef.current) {
       editorRef.current.innerHTML = value;
       prepareContentImages();
     }
-  }, [value]);
+  }, [prepareContentImages, value]);
 
-  function prepareContentImages() {
-    editorRef.current
-      ?.querySelectorAll<HTMLImageElement>("img.content-image")
-      .forEach((image) => {
-        image.contentEditable = "false";
-        image.draggable = false;
-        image.tabIndex = 0;
-      });
+  function cleanEditorHtml() {
+    const clone = editorRef.current?.cloneNode(true) as HTMLDivElement | null;
+    if (!clone) return "";
+
+    clone.querySelectorAll("[data-remove-content-image]").forEach((button) => {
+      button.remove();
+    });
+    clone.querySelectorAll("[data-content-image-frame]").forEach((frame) => {
+      frame.replaceWith(...Array.from(frame.childNodes));
+    });
+
+    return sanitizeContent(clone.innerHTML);
   }
 
   function syncValue() {
-    if (selectedImage && !selectedImage.isConnected) setSelectedImage(null);
-    onChange(sanitizeContent(editorRef.current?.innerHTML ?? ""));
+    onChange(cleanEditorHtml());
   }
 
   function runCommand(command: "bold" | "large") {
@@ -196,12 +229,42 @@ export function ContentEditor({
     return null;
   }
 
+  function removeImage(image: HTMLImageElement) {
+    if (
+      !window.confirm(
+        t("removeImageConfirm"),
+      )
+    ) {
+      return false;
+    }
+
+    const frame = image.closest<HTMLElement>("[data-content-image-frame]");
+    const block = (frame ?? image).closest("p");
+    const blockClone = block?.cloneNode(true) as HTMLElement | undefined;
+    blockClone?.querySelectorAll("[data-remove-content-image]").forEach((button) => {
+      button.remove();
+    });
+
+    if (
+      block &&
+      block.querySelectorAll("img.content-image").length === 1 &&
+      !blockClone?.textContent?.trim()
+    ) {
+      block.remove();
+    } else {
+      (frame ?? image).remove();
+    }
+
+    setNotice(t("imageRemovedNotice"));
+    syncValue();
+    return true;
+  }
+
   function preventImageDelete(direction: "backward" | "forward") {
     const image = imageForDelete(direction);
     if (!image) return false;
 
-    setSelectedImage(image);
-    setNotice("Use Remove image to delete this image. Save after removing it.");
+    removeImage(image);
     return true;
   }
 
@@ -223,9 +286,7 @@ export function ContentEditor({
     if (event.key !== "Backspace" && event.key !== "Delete") return;
 
     const direction = event.key === "Backspace" ? "backward" : "forward";
-    if (!preventImageDelete(direction)) return;
-
-    event.preventDefault();
+    if (preventImageDelete(direction)) event.preventDefault();
   }
 
   function handleBeforeInput(event: FormEvent<HTMLDivElement>) {
@@ -234,41 +295,36 @@ export function ContentEditor({
 
     const direction =
       inputEvent.inputType === "deleteContentForward" ? "forward" : "backward";
-    if (!preventImageDelete(direction)) return;
-
-    event.preventDefault();
+    if (preventImageDelete(direction)) event.preventDefault();
   }
 
-  function selectImage(event: MouseEvent<HTMLDivElement>) {
+  function handleEditorClick(event: MouseEvent<HTMLDivElement>) {
     const target = event.target;
 
-    if (
-      target instanceof HTMLImageElement &&
-      target.classList.contains("content-image")
-    ) {
-      setSelectedImage(target);
-      return;
-    }
+    if (!(target instanceof Element)) return;
 
-    setSelectedImage(null);
+    const removeButton = target.closest<HTMLButtonElement>(
+      "[data-remove-content-image]",
+    );
+    if (!removeButton) return;
+
+    const image = removeButton
+      .closest("[data-content-image-frame]")
+      ?.querySelector<HTMLImageElement>("img.content-image");
+    if (!image) return;
+
+    event.preventDefault();
+    removeImage(image);
   }
 
-  function removeSelectedImage() {
-    if (!selectedImage?.isConnected) {
-      setSelectedImage(null);
+  function handleEditorMouseDown(event: MouseEvent<HTMLDivElement>) {
+    if (
+      event.target instanceof Element &&
+      event.target.closest("[data-remove-content-image]")
+    ) {
+      event.preventDefault();
       return;
     }
-
-    const wrapper = selectedImage.closest("p");
-    if (wrapper?.querySelectorAll("img, video, iframe").length === 1) {
-      wrapper.remove();
-    } else {
-      selectedImage.remove();
-    }
-
-    setSelectedImage(null);
-    setNotice("Image removed. Save to delete it from Cloudinary, then upload again if needed.");
-    syncValue();
   }
 
   async function insertImage(file: File) {
@@ -397,19 +453,6 @@ export function ContentEditor({
             })}
           </div>
         ) : null}
-        {selectedImage ? (
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-200 bg-amber-50 px-3 py-2 text-sm font-bold text-amber-900">
-            <span>Image selected. Remove it here, then upload again if needed.</span>
-            <Button
-              type="button"
-              variant="destructive"
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={removeSelectedImage}
-            >
-              Remove image
-            </Button>
-          </div>
-        ) : null}
         <div
           ref={editorRef}
           className="learning-content min-h-72 cursor-text px-4 py-4 text-base text-neutral-950 outline-none [&_.text-large]:text-2xl"
@@ -418,8 +461,9 @@ export function ContentEditor({
           onBlur={syncValue}
           onBeforeInput={handleBeforeInput}
           onInput={syncValue}
-          onClick={selectImage}
+          onClick={handleEditorClick}
           onKeyDown={handleEditorKeyDown}
+          onMouseDown={handleEditorMouseDown}
           onPaste={pasteImage}
           role="textbox"
           aria-label="Content"

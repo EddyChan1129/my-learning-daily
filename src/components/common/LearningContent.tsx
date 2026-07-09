@@ -1,6 +1,7 @@
 "use client";
 
 import { MouseEvent, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import hljs from "highlight.js/lib/core";
 import bash from "highlight.js/lib/languages/bash";
 import css from "highlight.js/lib/languages/css";
@@ -59,13 +60,18 @@ export function LearningContent({ html, className = "" }: Props) {
 
   useEffect(() => {
     if (!previewImage) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
 
     function closeOnEscape(event: KeyboardEvent) {
       if (event.key === "Escape") setPreviewImage("");
     }
 
     window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
   }, [previewImage]);
 
   async function handleContentClick(event: MouseEvent<HTMLDivElement>) {
@@ -102,31 +108,34 @@ export function LearningContent({ html, className = "" }: Props) {
         dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
         onClick={handleContentClick}
       />
-      {previewImage ? (
-        <div
-          className="fixed inset-0 z-50 grid place-items-center bg-neutral-950/85 p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Image preview"
-          onClick={() => setPreviewImage("")}
-        >
-          <Button
-            className="absolute right-4 top-4"
-            type="button"
-            variant="secondary"
-            onClick={() => setPreviewImage("")}
-          >
-            Close
-          </Button>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            alt=""
-            className="max-h-[calc(100vh-96px)] max-w-[min(100%,1200px)] rounded-lg bg-white object-contain"
-            src={previewImage}
-            onClick={(event) => event.stopPropagation()}
-          />
-        </div>
-      ) : null}
+      {previewImage
+        ? createPortal(
+            <div
+              className="fixed inset-0 z-[100] grid place-items-center bg-neutral-950/90 p-4"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Image preview"
+              onClick={() => setPreviewImage("")}
+            >
+              <Button
+                className="fixed right-4 top-4 z-10"
+                type="button"
+                variant="secondary"
+                onClick={() => setPreviewImage("")}
+              >
+                Close
+              </Button>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                alt=""
+                className="max-h-[calc(100vh-80px)] max-w-[calc(100vw-32px)] rounded-lg bg-white object-contain shadow-[0_24px_80px_rgba(0,0,0,0.35)]"
+                src={previewImage}
+                onClick={(event) => event.stopPropagation()}
+              />
+            </div>,
+            document.body,
+          )
+        : null}
     </>
   );
 }

@@ -323,7 +323,7 @@ export function LearningDetail({ slug }: { slug: string }) {
           />
         </>
       ) : (
-        <Card className="p-5 sm:p-7">
+        <Card className="motion-card p-5 sm:p-7">
           <div className="mb-5 flex items-start justify-between gap-4">
             <p className="text-sm font-bold uppercase text-neutral-600">
               {[card.category, card.sub_field].filter(Boolean).join(" / ")}
@@ -338,7 +338,7 @@ export function LearningDetail({ slug }: { slug: string }) {
               {t("back")}
             </Link>
           </div>
-          <h1 className="mb-3 text-[clamp(36px,7vw,76px)] font-black leading-none tracking-normal text-neutral-950">
+          <h1 className="mb-3 text-5xl font-black leading-tight tracking-normal text-neutral-950 sm:text-6xl">
             {card.title}
           </h1>
           <time className="text-sm font-bold text-neutral-600">

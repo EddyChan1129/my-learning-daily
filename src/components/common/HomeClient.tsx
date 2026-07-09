@@ -284,6 +284,7 @@ export function HomeClient({ scope = "all" }: { scope?: HomeScope }) {
                 draftUploadId,
               )}
               categories={categories}
+              pendingLabel={t("creatingDoNotLeave")}
               onSubmit={createCard}
             />
           ) : null}
@@ -394,10 +395,11 @@ function CategoryPlaylistGrid({
       className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
       aria-label="Learning categories"
     >
-      {playlists.map((playlist) => (
+      {playlists.map((playlist, index) => (
         <CategoryPlaylistBox
           key={playlist.category}
           playlist={playlist}
+          index={index}
           onSelect={onSelect}
         />
       ))}
@@ -407,9 +409,11 @@ function CategoryPlaylistGrid({
 
 function CategoryPlaylistBox({
   playlist,
+  index,
   onSelect,
 }: {
   playlist: CategoryPlaylist;
+  index: number;
   onSelect: (category: string) => void;
 }) {
   const imageUrl = playlist.categoryImage.trim();
@@ -418,7 +422,8 @@ function CategoryPlaylistBox({
 
   return (
     <button
-      className="group text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral-950"
+      className="motion-card group text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral-950"
+      style={{ animationDelay: `${Math.min(index, 8) * 45}ms` }}
       type="button"
       onClick={() => onSelect(playlist.category)}
     >
@@ -486,10 +491,11 @@ function LearningCardGrid({
       className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
       aria-label="Learning cards"
     >
-      {cards.map((card) => (
+      {cards.map((card, index) => (
         <LearningCardLink
           card={card}
           key={card.id}
+          index={index}
           profile={card.user_id ? profiles[card.user_id] : undefined}
         />
       ))}
@@ -499,17 +505,20 @@ function LearningCardGrid({
 
 function LearningCardLink({
   card,
+  index,
   profile,
 }: {
   card: LearningCard;
+  index: number;
   profile?: Profile;
 }) {
   const imageUrl = learningCardImage(card);
 
   return (
     <Link
-      className="group overflow-hidden border border-stone-300 bg-white shadow-[0_10px_28px_rgba(26,26,26,0.05)] transition hover:-translate-y-1 hover:border-neutral-950 hover:shadow-[6px_6px_0_#1a1a1a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+      className="motion-card group overflow-hidden border border-stone-300 bg-white shadow-[0_10px_28px_rgba(26,26,26,0.05)] transition hover:-translate-y-1 hover:border-neutral-950 hover:shadow-[6px_6px_0_#1a1a1a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
       href={`/learning/${card.cloud_id ?? card.id}`}
+      style={{ animationDelay: `${Math.min(index, 8) * 45}ms` }}
     >
       <div className="grid h-64 place-items-center overflow-hidden border-b border-stone-200 bg-[#eef4ee] text-5xl font-black text-emerald-900 sm:h-72 lg:h-64">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -528,7 +537,7 @@ function LearningCardLink({
           </p>
           <time>{dayjs(card.learned_date).format("YYYY-MM-DD")}</time>
         </div>
-        <h2 className="mb-3 text-2xl font-black leading-none tracking-normal text-neutral-950 sm:text-3xl">
+        <h2 className="mb-3 text-xl font-black leading-tight tracking-normal text-neutral-950 sm:text-2xl">
           {card.title}
         </h2>
         <p className="line-clamp-3 text-base leading-relaxed text-neutral-600">
@@ -550,12 +559,12 @@ function LoadingGrid() {
           className="overflow-hidden border border-stone-300 bg-white shadow-[0_10px_28px_rgba(26,26,26,0.04)]"
           key={item}
         >
-          <div className="h-64 animate-pulse border-b border-stone-200 bg-stone-200 sm:h-72 lg:h-64" />
+          <div className="loading-shimmer h-64 border-b border-stone-200 sm:h-72 lg:h-64" />
           <div className="space-y-3 p-5">
-            <div className="h-3 w-20 animate-pulse bg-stone-200" />
-            <div className="h-8 w-3/4 animate-pulse bg-stone-200" />
-            <div className="h-4 w-full animate-pulse bg-stone-200" />
-            <div className="h-4 w-2/3 animate-pulse bg-stone-200" />
+            <div className="loading-shimmer h-3 w-20" />
+            <div className="loading-shimmer h-8 w-3/4" />
+            <div className="loading-shimmer h-4 w-full" />
+            <div className="loading-shimmer h-4 w-2/3" />
           </div>
         </div>
       ))}
