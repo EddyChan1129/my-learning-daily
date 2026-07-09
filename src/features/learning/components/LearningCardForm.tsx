@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ContentEditor } from "@/components/common/ContentEditor";
+import { ContentEditor } from "@/features/learning/components/ContentEditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,7 +24,7 @@ type Props = {
   onCancel?: () => void;
 };
 
-export function CardForm({
+export function LearningCardForm({
   initialValue,
   submitLabel,
   uploadFolder,

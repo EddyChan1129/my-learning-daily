@@ -5,17 +5,21 @@ import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { CardForm } from "@/components/common/CardForm";
-import { LearningContent } from "@/components/common/LearningContent";
+import { BlockingOverlay } from "@/features/learning/components/BlockingOverlay";
+import { LearningComments } from "@/features/learning/components/LearningComments";
+import { LearningCardForm } from "@/features/learning/components/LearningCardForm";
+import { LearningContent } from "@/features/learning/components/LearningContent";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   getCurrentUser,
   setCurrentUserCache,
 } from "@/features/auth/services/auth.service";
 import { useCategories } from "@/features/category/hooks/useCategories";
+import {
+  getLearningCard,
+  getLearningComments,
+} from "@/features/learning/services/learning-card.service";
 import { getProfile } from "@/features/profile/services/profile.service";
 import { getSupabase } from "@/lib/supabase";
 import type {
@@ -28,10 +32,6 @@ import {
   cloudinaryLearningFolder,
   cloudinaryLearningFolderFromUrl,
 } from "@/utils/cloudinary";
-import {
-  formatLearningCardError,
-  isUuid,
-} from "@/utils/learning";
 import type { User } from "@supabase/supabase-js";
 
 const supabase = getSupabase();
@@ -58,28 +58,17 @@ export function LearningDetail({ slug }: { slug: string }) {
   const [commentBody, setCommentBody] = useState("");
   const [commentMessage, setCommentMessage] = useState("");
 
+  async function loadProfile(currentUser: User) {
+    if (!supabase) return;
+
+    setProfile(await getProfile(supabase, currentUser));
+  }
+
   useEffect(() => {
     async function loadCard() {
       if (!supabase) return;
 
-      const column = isUuid(slug)
-        ? "id"
-        : /^\d+-\d{4}-\d{2}-\d{2}$/.test(slug)
-          ? "cloud_id"
-          : "slug";
-      const { data, error } = await supabase
-        .from("learning_cards")
-        .select("*")
-        .eq(column, slug)
-        .order("created_at", { ascending: false })
-        .limit(1);
-
-      if (error) {
-        setMessage(formatLearningCardError(error.message));
-        return;
-      }
-
-      const cardData = data?.[0] ?? (await loadCardBySlugPrefix(slug));
+      const cardData = await getLearningCard(supabase, slug);
 
       if (!cardData) {
         setMessage("Learning card not found.");
@@ -87,10 +76,13 @@ export function LearningDetail({ slug }: { slug: string }) {
       }
 
       setCard(cardData);
-      await loadComments(cardData.id);
+      setComments(await getLearningComments(supabase, cardData.id));
+      setCommentMessage("");
     }
 
-    loadCard();
+    loadCard().catch((error) => {
+      setMessage(error instanceof Error ? error.message : "Learning card failed.");
+    });
 
     if (!supabase) return;
 
@@ -99,7 +91,9 @@ export function LearningDetail({ slug }: { slug: string }) {
       if (currentUser) loadProfile(currentUser);
       setAuthReady(true);
     });
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "INITIAL_SESSION") return;
+
       setCurrentUserCache(session?.user ?? null);
       setUser(session?.user ?? null);
       if (session?.user) loadProfile(session.user);
@@ -122,43 +116,17 @@ export function LearningDetail({ slug }: { slug: string }) {
     return () => window.removeEventListener("beforeunload", blockLeave);
   }, [deleting]);
 
-  async function loadCardBySlugPrefix(value: string) {
-    if (!supabase || isUuid(value)) return null;
-
-    const baseSlug = value.replace(/-\d+$/, "");
-    const { data } = await supabase
-      .from("learning_cards")
-      .select("*")
-      .ilike("slug", `${baseSlug}%`)
-      .order("created_at", { ascending: false })
-      .limit(1);
-
-    return data?.[0] ?? null;
-  }
-
   async function loadComments(cardId: string) {
     if (!supabase) return;
 
-    const { data, error } = await supabase
-      .from("learning_comments")
-      .select("*")
-      .eq("card_id", cardId)
-      .eq("viod", false)
-      .order("created_at", { ascending: true });
-
-    if (error) {
-      setCommentMessage(error.message);
-      return;
+    try {
+      setComments(await getLearningComments(supabase, cardId, { force: true }));
+      setCommentMessage("");
+    } catch (error) {
+      setCommentMessage(
+        error instanceof Error ? error.message : "Learning comments failed.",
+      );
     }
-
-    setComments(data ?? []);
-    setCommentMessage("");
-  }
-
-  async function loadProfile(currentUser: User) {
-    if (!supabase) return;
-
-    setProfile(await getProfile(supabase, currentUser));
   }
 
   async function updateCard(value: LearningCardInput) {
@@ -307,7 +275,7 @@ export function LearningDetail({ slug }: { slug: string }) {
           >
             {t("back")}
           </Link>
-          <CardForm
+          <LearningCardForm
             initialValue={formValue}
             submitLabel={t("save")}
             uploadFolder={
@@ -369,7 +337,7 @@ export function LearningDetail({ slug }: { slug: string }) {
         </Card>
       )}
       {showComments ? (
-        <CommentSection
+        <LearningComments
           commentBody={commentBody}
           commentMessage={commentMessage}
           commentName={commentName}
@@ -382,118 +350,6 @@ export function LearningDetail({ slug }: { slug: string }) {
         />
       ) : null}
     </main>
-  );
-}
-
-function CommentSection({
-  commentBody,
-  commentMessage,
-  commentName,
-  comments,
-  user,
-  onBodyChange,
-  onCommentDelete,
-  onNameChange,
-  onSubmit,
-}: {
-  commentBody: string;
-  commentMessage: string;
-  commentName: string;
-  comments: LearningComment[];
-  user: User | null;
-  onBodyChange: (value: string) => void;
-  onCommentDelete: (commentId: string) => void;
-  onNameChange: (value: string) => void;
-  onSubmit: () => void;
-}) {
-  const { t } = useTranslation();
-
-  return (
-    <section className="mt-6 border border-neutral-950 bg-white p-4 shadow-[6px_6px_0_#1a1a1a] sm:p-5">
-      <div className="mb-4">
-        <h2 className="text-2xl font-black text-neutral-950">
-          {t("comments")}
-        </h2>
-        <p className="text-sm text-neutral-600">{t("commentsBody")}</p>
-      </div>
-
-      <div className="grid gap-3">
-        <Input
-          value={commentName}
-          onChange={(event) => onNameChange(event.target.value)}
-          placeholder={t("name")}
-          maxLength={40}
-        />
-        <Textarea
-          className="min-h-24"
-          value={commentBody}
-          onChange={(event) => onBodyChange(event.target.value)}
-          placeholder={t("writeComment")}
-          maxLength={1000}
-        />
-        {commentMessage ? (
-          <p className="text-sm font-bold text-red-700">{commentMessage}</p>
-        ) : null}
-        <div className="flex justify-end">
-          <Button onClick={onSubmit}>{t("postComment")}</Button>
-        </div>
-      </div>
-
-      <div className="mt-6 grid gap-3">
-        {comments.length === 0 ? (
-          <p className="border border-dashed border-stone-300 p-4 text-sm text-neutral-600">
-            {t("emptyComments")}
-          </p>
-        ) : (
-          comments.map((comment) => (
-            <article
-              className="border border-stone-200 bg-[#fffdf8] p-3"
-              key={comment.id}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="font-black text-neutral-950">
-                    {comment.author_name}
-                  </p>
-                  <time className="text-xs font-bold text-neutral-500">
-                    {comment.created_at
-                      ? dayjs(comment.created_at).format("YYYY-MM-DD HH:mm")
-                      : "-"}
-                  </time>
-                </div>
-                {user ? (
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    onClick={() => onCommentDelete(comment.id)}
-                  >
-                    {t("delete")}
-                  </Button>
-                ) : null}
-              </div>
-              <p className="mt-3 whitespace-pre-wrap leading-relaxed text-neutral-800">
-                {comment.body}
-              </p>
-            </article>
-          ))
-        )}
-      </div>
-    </section>
-  );
-}
-
-function BlockingOverlay({ message }: { message: string }) {
-  return (
-    <div
-      className="fixed inset-0 z-50 grid place-items-center bg-neutral-950/35 p-4"
-      role="status"
-      aria-live="polite"
-    >
-      <div className="flex min-w-72 items-center gap-3 rounded-lg border border-stone-200 bg-white px-5 py-4 text-sm font-black text-neutral-950 shadow-[8px_8px_0_#1a1a1a]">
-        <span className="h-5 w-5 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-950" />
-        {message}
-      </div>
-    </div>
   );
 }
 

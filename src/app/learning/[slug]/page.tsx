@@ -1,4 +1,4 @@
-import { LearningDetail } from "@/components/common/LearningDetail";
+import { LearningDetail } from "@/features/learning/components/LearningDetail";
 
 export default async function Page({
   params,

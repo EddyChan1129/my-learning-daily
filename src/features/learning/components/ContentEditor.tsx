@@ -12,12 +12,8 @@ import {
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/components/ui/button";
-import {
-  CLOUDINARY_EMOJIS,
-  cloudinaryEmojiUrl,
-  uploadLearningImage,
-} from "@/utils/cloudinary";
+import { ContentEditorToolbar } from "@/features/learning/components/ContentEditorToolbar";
+import { uploadLearningImage } from "@/utils/cloudinary";
 import { sanitizeContent } from "@/utils/content";
 
 type Props = {
@@ -147,8 +143,7 @@ export function ContentEditor({
     syncValue();
   }
 
-  function insertEmoji(publicId: string, label: string) {
-    const imageUrl = cloudinaryEmojiUrl(publicId);
+  function insertEmoji(imageUrl: string, label: string) {
     if (!imageUrl) return;
 
     editorRef.current?.focus();
@@ -373,86 +368,19 @@ export function ContentEditor({
   return (
     <div className="grid gap-2">
       <div className="overflow-hidden rounded-lg border border-stone-200 bg-white focus-within:outline-2 focus-within:outline-neutral-950">
-        <div className="flex flex-wrap gap-2 border-b border-stone-200 bg-stone-50 p-2">
-          <Button
-            type="button"
-            variant="secondary"
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => runCommand("bold")}
-          >
-            {t("bold")}
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => runCommand("large")}
-          >
-            {t("large")}
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={insertCodeBlock}
-          >
-            Code
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            aria-expanded={showEmojis}
-            aria-label={t("emoji")}
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => setShowEmojis((currentValue) => !currentValue)}
-          >
-            ☺
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            disabled={uploading}
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            {uploading ? t("uploading") : t("uploadImage")}
-          </Button>
-          <input
-            ref={fileInputRef}
-            accept="image/*"
-            className="hidden"
-            type="file"
-            onChange={uploadImage}
-          />
-        </div>
-        {showEmojis ? (
-          <div className="grid grid-cols-8 gap-1 border-b border-stone-200 bg-[#26373b] p-2 sm:grid-cols-12">
-            {CLOUDINARY_EMOJIS.map((emoji) => {
-              const imageUrl = cloudinaryEmojiUrl(emoji.publicId);
-
-              return (
-              <button
-                key={emoji.publicId}
-                type="button"
-                className="flex aspect-square items-center justify-center rounded-md transition hover:bg-white/15 focus-visible:outline-2 focus-visible:outline-white"
-                onMouseDown={(event) => event.preventDefault()}
-                onClick={() => insertEmoji(emoji.publicId, emoji.label)}
-              >
-                {imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    alt={emoji.label}
-                    className="h-8 w-8 object-contain"
-                    src={imageUrl}
-                  />
-                ) : (
-                  "?"
-                )}
-              </button>
-              );
-            })}
-          </div>
-        ) : null}
+        <ContentEditorToolbar
+          fileInputRef={fileInputRef}
+          showEmojis={showEmojis}
+          uploading={uploading}
+          onBold={() => runCommand("bold")}
+          onCode={insertCodeBlock}
+          onEmojiSelect={insertEmoji}
+          onLarge={() => runCommand("large")}
+          onToggleEmojis={() =>
+            setShowEmojis((currentValue) => !currentValue)
+          }
+          onUploadImage={uploadImage}
+        />
         <div
           ref={editorRef}
           className="learning-content min-h-72 cursor-text px-4 py-4 text-base text-neutral-950 outline-none [&_.text-large]:text-2xl"

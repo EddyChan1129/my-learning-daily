@@ -1,5 +1,5 @@
-import { HomeClient } from "@/components/common/HomeClient";
+import { LearningWallClient } from "@/features/learning/components/LearningWallClient";
 
 export default function Home() {
-  return <HomeClient />;
+  return <LearningWallClient />;
 }

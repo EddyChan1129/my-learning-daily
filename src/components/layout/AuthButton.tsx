@@ -48,7 +48,9 @@ export function AuthButton() {
       setUser(currentUser);
       if (currentUser) loadProfile(currentUser);
     });
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "INITIAL_SESSION") return;
+
       setCurrentUserCache(session?.user ?? null);
       setUser(session?.user ?? null);
       if (session?.user) loadProfile(session.user);

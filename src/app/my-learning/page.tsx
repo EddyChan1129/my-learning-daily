@@ -1,5 +1,5 @@
-import { HomeClient } from "@/components/common/HomeClient";
+import { LearningWallClient } from "@/features/learning/components/LearningWallClient";
 
 export default function MyLearningPage() {
-  return <HomeClient scope="mine" />;
+  return <LearningWallClient scope="mine" />;
 }

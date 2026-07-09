@@ -10,7 +10,9 @@
   },
   "description": "Eddy daily learning app",
   "dependencies": {
+    "@reduxjs/toolkit": "^2.12.0",
     "@supabase/supabase-js": "^2.108.2",
+    "@tanstack/react-query": "^5.101.2",
     "clsx": "^2.1.1",
     "dayjs": "^1.11.21",
     "highlight.js": "^11.11.1",
@@ -19,6 +21,7 @@
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-i18next": "^17.0.8",
+    "react-redux": "^9.3.0",
     "tailwind-merge": "^3.6.0",
     "zod": "^4.4.3"
   },
