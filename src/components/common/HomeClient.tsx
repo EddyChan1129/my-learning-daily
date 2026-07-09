@@ -219,7 +219,7 @@ export function HomeClient({ scope = "all" }: { scope?: HomeScope }) {
               {t("learningWall")}
             </p>
             <p className="mt-3 text-lg font-black leading-relaxed text-neutral-800">
-              {t("dailyPrompt")}
+              {t("progressWallCardBody")}
             </p>
           </div>
           <div className="mt-6 grid grid-cols-3 border border-stone-200 bg-[#fffaf0]">
@@ -264,7 +264,7 @@ export function HomeClient({ scope = "all" }: { scope?: HomeScope }) {
         />
       ) : null}
 
-      {isMyLearning && user ? (
+      {user ? (
         <section className="mb-8 border border-stone-300 bg-[#fffdf8] p-4 shadow-[6px_6px_0_rgba(26,26,26,0.88)]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>

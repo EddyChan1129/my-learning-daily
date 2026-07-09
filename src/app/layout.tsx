@@ -9,10 +9,13 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "KnowBit",
-  description: "每日做小小改變，記低小小進步。",
+  description: "每日記低一點進步，慢慢就會見到自己行遠咗。",
   icons: {
-    icon: "/images/logo/favicon.png",
-    apple: "/images/logo/favicon.png",
+    icon: [
+      { url: "/favicon.ico?v=3" },
+      { url: "/favicon.png?v=3", type: "image/png", sizes: "256x256" },
+    ],
+    apple: "/favicon.png?v=3",
   },
 };
 
