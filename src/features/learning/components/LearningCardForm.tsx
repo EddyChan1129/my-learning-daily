@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ContentEditor } from "@/features/learning/components/ContentEditor";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,6 @@ import { categoryImageForId } from "@/features/category/constants";
 import type { LearningCategory } from "@/types/category";
 import type { LearningCardInput } from "@/types/learning";
 import { contentSummary } from "@/utils/content";
-import { cloudinaryPublicIdsFromContent } from "@/utils/cloudinary";
 import { validateCard } from "@/utils/learning";
 
 type Props = {
@@ -38,17 +37,8 @@ export function LearningCardForm({
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const categoryGroups = groupCategories(categories);
-  const initialImagePublicIds = useMemo(
-    () => cloudinaryPublicIdsFromContent(initialValue.content),
-    [initialValue.content],
-  );
-  const currentImagePublicIds = cloudinaryPublicIdsFromContent(value.content);
-  const isRemovingImage = initialImagePublicIds.some(
-    (publicId) => !currentImagePublicIds.includes(publicId),
-  );
-
   useEffect(() => {
-    if (!saving && !isRemovingImage) return;
+    if (!saving) return;
 
     function blockLeave(event: BeforeUnloadEvent) {
       event.preventDefault();
@@ -57,7 +47,7 @@ export function LearningCardForm({
 
     window.addEventListener("beforeunload", blockLeave);
     return () => window.removeEventListener("beforeunload", blockLeave);
-  }, [isRemovingImage, saving]);
+  }, [saving]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

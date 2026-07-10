@@ -1,6 +1,24 @@
+import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
 export async function DELETE(request: Request) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const authorization = request.headers.get("authorization");
+
+  if (!supabaseUrl || !anonKey || !authorization) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  const supabase = createClient(supabaseUrl, anonKey, {
+    global: { headers: { Authorization: authorization } },
+  });
+  const { data } = await supabase.auth.getUser();
+
+  if (!data.user) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
   const cloudName =
     process.env.CLOUDINARY_CLOUD_NAME ??
     process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
@@ -37,20 +55,38 @@ export async function DELETE(request: Request) {
 
   const auth = `Basic ${Buffer.from(`${apiKey}:${apiSecret}`).toString("base64")}`;
   const baseUrl = `https://api.cloudinary.com/v1_1/${cloudName}`;
+  const deleted: Record<string, string> = {};
 
   for (const folder of folders) {
     if (/%|[^\x20-\x7E]/.test(folder)) continue;
 
     const prefix = `${folder.replace(/\/$/, "")}/`;
+    const deleteParams = new URLSearchParams({ invalidate: "true", prefix });
     const deleteResources = await fetch(
-      `${baseUrl}/resources/image/upload?prefix=${encodeURIComponent(prefix)}&invalidate=true`,
-      { headers: { Authorization: auth }, method: "DELETE" },
+      `${baseUrl}/resources/image/upload`,
+      {
+        body: deleteParams,
+        headers: {
+          Authorization: auth,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        method: "DELETE",
+      },
     );
 
     if (!deleteResources.ok) {
       return NextResponse.json(
         { error: await deleteResources.text() },
         { status: deleteResources.status },
+      );
+    }
+
+    const result = await deleteResources.json();
+    Object.assign(deleted, result.deleted);
+    if (result.unauthorized?.length) {
+      return NextResponse.json(
+        { error: "Cloudinary API key is not authorized to delete these assets." },
+        { status: 403 },
       );
     }
 
@@ -71,13 +107,24 @@ export async function DELETE(request: Request) {
     }
   }
 
-  if (publicIds.length > 0) {
-    const query = publicIds
-      .map((publicId) => `public_ids[]=${encodeURIComponent(publicId)}`)
-      .join("&");
+  const remainingPublicIds = publicIds.filter(
+    (publicId) => deleted[publicId] !== "deleted",
+  );
+  if (remainingPublicIds.length > 0) {
+    const deleteParams = new URLSearchParams({ invalidate: "true" });
+    remainingPublicIds.forEach((publicId) =>
+      deleteParams.append("public_ids[]", publicId),
+    );
     const deleteResources = await fetch(
-      `${baseUrl}/resources/image/upload?${query}&invalidate=true`,
-      { headers: { Authorization: auth }, method: "DELETE" },
+      `${baseUrl}/resources/image/upload`,
+      {
+        body: deleteParams,
+        headers: {
+          Authorization: auth,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        method: "DELETE",
+      },
     );
 
     if (!deleteResources.ok) {
@@ -86,7 +133,29 @@ export async function DELETE(request: Request) {
         { status: deleteResources.status },
       );
     }
+
+    const result = await deleteResources.json();
+    Object.assign(deleted, result.deleted);
+    if (result.unauthorized?.length) {
+      return NextResponse.json(
+        { error: "Cloudinary API key is not authorized to delete these assets." },
+        { status: 403 },
+      );
+    }
+
+    const failedPublicIds = remainingPublicIds.filter(
+      (publicId) => deleted[publicId] !== "deleted",
+    );
+    if (failedPublicIds.length > 0) {
+      return NextResponse.json(
+        {
+          error: `Cloudinary did not delete: ${failedPublicIds.join(", ")}.`,
+          deleted,
+        },
+        { status: 502 },
+      );
+    }
   }
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ deleted, ok: true });
 }

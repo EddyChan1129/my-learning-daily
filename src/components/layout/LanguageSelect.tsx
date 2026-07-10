@@ -12,10 +12,10 @@ export function LanguageSelect() {
   }
 
   return (
-    <label className="fixed left-3 top-3 z-10 flex items-center gap-2 rounded-full border border-stone-200 bg-white/95 p-1.5 text-xs font-black text-neutral-600 shadow-[0_10px_30px_rgba(26,26,26,0.08)] backdrop-blur sm:left-4 sm:top-4">
+    <label className="flex w-full items-center rounded-xl border border-stone-200 bg-stone-50 p-1 text-xs font-black text-neutral-600">
       <span className="sr-only">{t("language")}</span>
       <Select
-        className="min-h-9 w-28 rounded-full px-3 text-sm"
+        className="min-h-10 w-full rounded-lg border-0 bg-transparent px-3 text-sm"
         value={i18n.language}
         onChange={(event) => changeLanguage(event.target.value)}
       >

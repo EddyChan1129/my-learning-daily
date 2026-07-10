@@ -13,7 +13,12 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { ContentEditorToolbar } from "@/features/learning/components/ContentEditorToolbar";
-import { uploadLearningImage } from "@/utils/cloudinary";
+import { getSupabase } from "@/lib/supabase";
+import {
+  cloudinaryPublicIdFromUrl,
+  deleteCloudinaryAssets,
+  uploadLearningImage,
+} from "@/utils/cloudinary";
 import { sanitizeContent } from "@/utils/content";
 
 type Props = {
@@ -145,8 +150,12 @@ export function ContentEditor({
     if (!editor) return;
 
     const imageBlock = document.createElement("p");
-    imageBlock.innerHTML =
-      `<img class="content-image" src="${imageUrl}" alt="" />`;
+    const image = document.createElement("img");
+    image.className = "content-image";
+    image.src = imageUrl;
+    image.alt = "";
+    imageBlock.append(image);
+
     const typingBlock = document.createElement("p");
     typingBlock.append(document.createElement("br"));
 
@@ -162,10 +171,10 @@ export function ContentEditor({
       editor.append(imageBlock, typingBlock);
     }
 
-    const selection = window.getSelection();
     const nextRange = document.createRange();
     nextRange.setStart(typingBlock, 0);
     nextRange.collapse(true);
+    const selection = window.getSelection();
     selection?.removeAllRanges();
     selection?.addRange(nextRange);
   }
@@ -263,12 +272,40 @@ export function ContentEditor({
     return null;
   }
 
-  function removeImage(image: HTMLImageElement) {
+  async function removeImage(image: HTMLImageElement) {
+    if (image.dataset.deleting) return false;
+
     if (
       !window.confirm(
         t("removeImageConfirm"),
       )
     ) {
+      return false;
+    }
+
+    image.dataset.deleting = "true";
+    setError("");
+    setNotice("");
+
+    try {
+      const publicId = cloudinaryPublicIdFromUrl(image.currentSrc || image.src);
+
+      if (publicId) {
+        const { data } = await getSupabase()?.auth.getSession() ?? { data: null };
+        const accessToken = data?.session?.access_token;
+        if (!accessToken) throw new Error("Please sign in before deleting images.");
+
+        await deleteCloudinaryAssets({
+          accessToken,
+          folders: [],
+          publicIds: [publicId],
+        });
+      }
+    } catch (deleteError) {
+      delete image.dataset.deleting;
+      setError(
+        deleteError instanceof Error ? deleteError.message : "Image delete failed.",
+      );
       return false;
     }
 
@@ -298,7 +335,7 @@ export function ContentEditor({
     const image = imageForDelete(direction);
     if (!image) return false;
 
-    removeImage(image);
+    void removeImage(image);
     return true;
   }
 
@@ -348,7 +385,7 @@ export function ContentEditor({
     if (!image) return;
 
     event.preventDefault();
-    removeImage(image);
+    void removeImage(image);
   }
 
   function handleEditorMouseDown(event: MouseEvent<HTMLDivElement>) {
