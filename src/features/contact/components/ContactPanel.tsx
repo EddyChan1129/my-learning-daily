@@ -10,12 +10,44 @@ import { Textarea } from "@/components/ui/textarea";
 
 export function ContactPanel() {
   const { t } = useTranslation();
-  const [submitted, setSubmitted] = useState(false);
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
+    "idle",
+  );
+  const [error, setError] = useState("");
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    event.currentTarget.reset();
-    setSubmitted(true);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+
+    setStatus("sending");
+    setError("");
+
+    try {
+      const response = await fetch("/api/contact", {
+        body: JSON.stringify({
+          content: formData.get("content"),
+          email: formData.get("email"),
+          title: formData.get("title"),
+          website: formData.get("website"),
+        }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      });
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.error ?? "Email could not be sent.");
+
+      form.reset();
+      setStatus("sent");
+    } catch (submitError) {
+      setError(
+        submitError instanceof Error
+          ? submitError.message
+          : "Email could not be sent.",
+      );
+      setStatus("error");
+    }
   }
 
   return (
@@ -38,6 +70,13 @@ export function ContactPanel() {
 
         <div className="border-t border-stone-200 bg-[#fffaf0] p-5 sm:p-7 lg:border-l lg:border-t-0">
           <form className="grid gap-4" onSubmit={handleSubmit}>
+            <input
+              className="hidden"
+              name="website"
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+            />
             <Label>
               {t("email")}
               <Input
@@ -67,12 +106,18 @@ export function ContactPanel() {
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-xs font-bold leading-relaxed text-neutral-500">
-                {submitted
+                {status === "sent"
                   ? t("footerContactSubmitted")
-                  : t("footerContactPending")}
+                  : status === "error"
+                    ? error
+                    : t("footerContactPending")}
               </p>
-              <Button className="w-full sm:w-auto" type="submit">
-                {t("submit")}
+              <Button
+                className="w-full sm:w-auto"
+                disabled={status === "sending"}
+                type="submit"
+              >
+                {status === "sending" ? t("sending") : t("submit")}
               </Button>
             </div>
           </form>
