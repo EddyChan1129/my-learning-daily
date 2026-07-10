@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 export function ContactPanel() {
   const { t } = useTranslation();
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
+  const [status, setStatus] = useState<"idle" | "sending" | "error">(
     "idle",
   );
   const [error, setError] = useState("");
@@ -39,14 +40,17 @@ export function ContactPanel() {
       if (!response.ok) throw new Error(data.error ?? "Email could not be sent.");
 
       form.reset();
-      setStatus("sent");
+      setStatus("idle");
+      toast.success(t("footerContactSubmitted"));
     } catch (submitError) {
-      setError(
+      const message =
         submitError instanceof Error
           ? submitError.message
-          : "Email could not be sent.",
-      );
+          : "Email could not be sent.";
+
+      setError(message);
       setStatus("error");
+      toast.error(message);
     }
   }
 
@@ -106,11 +110,7 @@ export function ContactPanel() {
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-xs font-bold leading-relaxed text-neutral-500">
-                {status === "sent"
-                  ? t("footerContactSubmitted")
-                  : status === "error"
-                    ? error
-                    : t("footerContactPending")}
+                {status === "error" ? error : t("footerContactPending")}
               </p>
               <Button
                 className="w-full sm:w-auto"
