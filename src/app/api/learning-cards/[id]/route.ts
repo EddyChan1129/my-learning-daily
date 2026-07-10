@@ -2,6 +2,10 @@ import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import type { LearningCard, Profile } from "@/types/learning";
 import {
+  CloudinaryDeleteError,
+  deleteCloudinaryAssets,
+} from "@/lib/cloudinary-admin";
+import {
   cloudinaryLearningFolder,
   cloudinaryLearningFolderFromUrl,
   cloudinaryPublicIdFromUrl,
@@ -142,29 +146,34 @@ export async function DELETE(
       ].filter((publicId): publicId is string => Boolean(publicId)),
     ),
   );
-  const origin = new URL(request.url).origin;
-  const deleteAssets = await fetch(`${origin}/api/cloudinary/folder`, {
-    body: JSON.stringify({ folders, publicIds }),
-    headers: {
-      Authorization: request.headers.get("authorization") ?? "",
-      "Content-Type": "application/json",
-    },
-    method: "DELETE",
-  });
-
-  if (!deleteAssets.ok) {
-    const data = await deleteAssets.json().catch(() => null);
-
+  try {
+    await deleteCloudinaryAssets({ folders, publicIds });
+  } catch (error) {
     return NextResponse.json(
-      { error: data?.error ?? "Cloudinary folder delete failed." },
-      { status: deleteAssets.status },
+      {
+        error:
+          error instanceof Error ? error.message : "Cloudinary delete failed.",
+      },
+      { status: error instanceof CloudinaryDeleteError ? error.status : 500 },
     );
   }
 
-  const { error } = await supabase.from("learning_cards").delete().eq("id", id);
+  const { data: deletedCard, error } = await supabase
+    .from("learning_cards")
+    .delete()
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 });
+  }
+
+  if (!deletedCard) {
+    return NextResponse.json(
+      { error: "Supabase did not delete the learning card. Check its DELETE policy." },
+      { status: 403 },
+    );
   }
 
   return NextResponse.json({ ok: true });
