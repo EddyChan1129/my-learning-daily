@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Footer } from "@/components/layout/Footer";
 import { Navbar } from "@/components/layout/Navbar";
 import { PageTransition } from "@/components/common/PageTransition";
+import { Toaster } from "@/components/ui/sonner";
 import { AppProviders } from "@/app/providers";
 import "./globals.css";
 
@@ -29,6 +30,7 @@ export default function RootLayout({
           <Navbar />
           <PageTransition>{children}</PageTransition>
           <Footer />
+          <Toaster />
         </AppProviders>
       </body>
     </html>
