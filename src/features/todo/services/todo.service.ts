@@ -1,74 +1,67 @@
+import { getSupabase } from "@/lib/supabase";
 import type { TodoItem } from "@/types/todo";
 
-const TODOS_STORAGE_KEY = "knowbit_todos";
+function requireSupabase() {
+  const supabase = getSupabase();
+  if (!supabase) throw new Error("Supabase is not configured.");
 
-const DEFAULT_TODOS = [
-  "redis",
-  "auth",
-  "MQ",
-  "SEO",
-  "stripe",
-  "AI 總結1個月",
-  "AI translate",
-  "AI summarize in content",
-];
-
-function seedTodos(): TodoItem[] {
-  return DEFAULT_TODOS.map((title, index) => ({
-    id: `seed-${index + 1}`,
-    title,
-    completed: false,
-    createdAt: new Date(2026, 6, 10, 9, index).toISOString(),
-  }));
+  return supabase;
 }
 
-function readTodos() {
-  if (typeof window === "undefined") return seedTodos();
+async function getUserId() {
+  const { data, error } = await requireSupabase().auth.getUser();
+  if (error || !data.user) throw new Error("Please sign in to manage todos.");
 
-  const storedValue = localStorage.getItem(TODOS_STORAGE_KEY);
-  if (!storedValue) {
-    const seeded = seedTodos();
-    localStorage.setItem(TODOS_STORAGE_KEY, JSON.stringify(seeded));
-    return seeded;
-  }
-
-  try {
-    return JSON.parse(storedValue) as TodoItem[];
-  } catch {
-    const seeded = seedTodos();
-    localStorage.setItem(TODOS_STORAGE_KEY, JSON.stringify(seeded));
-    return seeded;
-  }
-}
-
-function writeTodos(todos: TodoItem[]) {
-  localStorage.setItem(TODOS_STORAGE_KEY, JSON.stringify(todos));
-  return todos;
+  return data.user.id;
 }
 
 export async function getTodos() {
-  return readTodos();
+  const supabase = requireSupabase();
+  const userId = await getUserId();
+  const { data, error } = await supabase
+    .from("todos")
+    .select("id, title, completed, created_at")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .returns<TodoItem[]>();
+
+  if (error) throw error;
+
+  return data ?? [];
 }
 
 export async function addTodo(title: string) {
-  const todo: TodoItem = {
-    id: crypto.randomUUID(),
-    title,
-    completed: false,
-    createdAt: new Date().toISOString(),
-  };
+  const supabase = requireSupabase();
+  const userId = await getUserId();
+  const { data, error } = await supabase
+    .from("todos")
+    .insert({ title, user_id: userId })
+    .select("id, title, completed, created_at")
+    .single<TodoItem>();
 
-  return writeTodos([todo, ...readTodos()]);
+  if (error) throw error;
+
+  return data;
 }
 
-export async function toggleTodo(todoId: string) {
-  return writeTodos(
-    readTodos().map((todo) =>
-      todo.id === todoId ? { ...todo, completed: !todo.completed } : todo,
-    ),
-  );
+export async function toggleTodo(todo: TodoItem) {
+  const { data, error } = await requireSupabase()
+    .from("todos")
+    .update({ completed: !todo.completed })
+    .eq("id", todo.id)
+    .select("id, title, completed, created_at")
+    .single<TodoItem>();
+
+  if (error) throw error;
+
+  return data;
 }
 
 export async function deleteTodo(todoId: string) {
-  return writeTodos(readTodos().filter((todo) => todo.id !== todoId));
+  const { error } = await requireSupabase()
+    .from("todos")
+    .delete()
+    .eq("id", todoId);
+
+  if (error) throw error;
 }

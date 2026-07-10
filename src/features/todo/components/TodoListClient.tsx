@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { FormEvent } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -13,22 +13,30 @@ import {
   toggleTodo,
 } from "@/features/todo/services/todo.service";
 import {
+  getCurrentUser,
+  setCurrentUserCache,
+} from "@/features/auth/services/auth.service";
+import {
   clearDraftTitle,
   setDraftTitle,
   setFilter,
 } from "@/features/todo/stores/todoUiSlice";
 import { useAppDispatch, useAppSelector } from "@/stores/hooks";
+import { getSupabase } from "@/lib/supabase";
 import type { RootState } from "@/types/store";
 import type { TodoFilter, TodoItem } from "@/types/todo";
 import { cn } from "@/utils/cn";
 
-const todoQueryKey = ["todos"];
+const supabase = getSupabase();
 const filters: TodoFilter[] = ["all", "open", "done"];
 
 export function TodoListClient() {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const queryClient = useQueryClient();
+  const [userId, setUserId] = useState<string | null>(null);
+  const [authReady, setAuthReady] = useState(() => !supabase);
+  const todoQueryKey = ["todos", userId];
   const draftTitle = useAppSelector(
     (state: RootState) => state.todoUi.draftTitle,
   );
@@ -36,6 +44,7 @@ export function TodoListClient() {
   const todosQuery = useQuery({
     queryKey: todoQueryKey,
     queryFn: getTodos,
+    enabled: authReady && Boolean(userId),
   });
   const invalidateTodos = () =>
     queryClient.invalidateQueries({ queryKey: todoQueryKey });
@@ -51,6 +60,10 @@ export function TodoListClient() {
     mutationFn: deleteTodo,
     onSuccess: invalidateTodos,
   });
+  const mutationError =
+    addTodoMutation.error ??
+    toggleTodoMutation.error ??
+    deleteTodoMutation.error;
   const todos = todosQuery.data ?? [];
   const visibleTodos = filterTodos(todos, filter);
   const doneCount = todos.filter((todo) => todo.completed).length;
@@ -59,11 +72,29 @@ export function TodoListClient() {
     toggleTodoMutation.isPending ||
     deleteTodoMutation.isPending;
 
+  useEffect(() => {
+    if (!supabase) return;
+
+    getCurrentUser(supabase)
+      .then((user) => setUserId(user?.id ?? null))
+      .catch(() => setUserId(null))
+      .finally(() => setAuthReady(true));
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "INITIAL_SESSION") return;
+
+      setCurrentUserCache(session?.user ?? null);
+      setUserId(session?.user.id ?? null);
+      setAuthReady(true);
+    });
+
+    return () => data.subscription.unsubscribe();
+  }, []);
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const title = draftTitle.trim();
-    if (!title) return;
+    if (!title || !userId) return;
 
     addTodoMutation.mutate(title, {
       onSuccess: () => dispatch(clearDraftTitle()),
@@ -105,7 +136,7 @@ export function TodoListClient() {
             placeholder={t("todoPlaceholder")}
             onChange={(event) => dispatch(setDraftTitle(event.target.value))}
           />
-          <Button disabled={isMutating} type="submit">
+          <Button disabled={!userId || isMutating} type="submit">
             {isMutating ? t("saving") : t("todoAdd")}
           </Button>
         </form>
@@ -134,7 +165,17 @@ export function TodoListClient() {
               {t("todoLoadFailed")}
             </p>
           ) : null}
-          {!todosQuery.isLoading && visibleTodos.length === 0 ? (
+          {authReady && !userId ? (
+            <p className="border border-dashed border-stone-300 p-4 text-sm font-bold text-neutral-500">
+              {t("todoSignInRequired")}
+            </p>
+          ) : null}
+          {mutationError ? (
+            <p className="border border-red-300 bg-red-50 p-4 text-sm font-bold text-red-800">
+              {mutationError.message}
+            </p>
+          ) : null}
+          {userId && !todosQuery.isLoading && visibleTodos.length === 0 ? (
             <p className="border border-dashed border-stone-300 p-4 text-sm font-bold text-neutral-500">
               {t("todoEmpty")}
             </p>
@@ -145,7 +186,7 @@ export function TodoListClient() {
               todo={todo}
               disabled={isMutating}
               onDelete={() => deleteTodoMutation.mutate(todo.id)}
-              onToggle={() => toggleTodoMutation.mutate(todo.id)}
+              onToggle={() => toggleTodoMutation.mutate(todo)}
             />
           ))}
         </div>

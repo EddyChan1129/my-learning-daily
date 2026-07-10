@@ -4,7 +4,7 @@ export type TodoItem = {
   id: string;
   title: string;
   completed: boolean;
-  createdAt: string;
+  created_at: string;
 };
 
 export type TodoUiState = {
