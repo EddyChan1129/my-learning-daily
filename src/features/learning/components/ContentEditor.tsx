@@ -131,6 +131,45 @@ export function ContentEditor({
     range.insertNode(document.createRange().createContextualFragment(html));
   }
 
+  function currentEditorRange() {
+    const selection = window.getSelection();
+    const range = selection?.rangeCount ? selection.getRangeAt(0) : null;
+
+    return range && editorRef.current?.contains(range.commonAncestorContainer)
+      ? range.cloneRange()
+      : null;
+  }
+
+  function insertImageBlock(imageUrl: string, range: Range | null) {
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    const imageBlock = document.createElement("p");
+    imageBlock.innerHTML =
+      `<img class="content-image" src="${imageUrl}" alt="" />`;
+    const typingBlock = document.createElement("p");
+    typingBlock.append(document.createElement("br"));
+
+    let current = range?.startContainer ?? null;
+    while (current?.parentNode && current.parentNode !== editor) {
+      current = current.parentNode;
+    }
+
+    if (current?.parentNode === editor) {
+      editor.insertBefore(imageBlock, current.nextSibling);
+      editor.insertBefore(typingBlock, imageBlock.nextSibling);
+    } else {
+      editor.append(imageBlock, typingBlock);
+    }
+
+    const selection = window.getSelection();
+    const nextRange = document.createRange();
+    nextRange.setStart(typingBlock, 0);
+    nextRange.collapse(true);
+    selection?.removeAllRanges();
+    selection?.addRange(nextRange);
+  }
+
   function insertCodeBlock() {
     editorRef.current?.focus();
     const selection = window.getSelection();
@@ -322,7 +361,7 @@ export function ContentEditor({
     }
   }
 
-  async function insertImage(file: File) {
+  async function insertImage(file: File, range = currentEditorRange()) {
     if (!file) return;
 
     setUploading(true);
@@ -331,9 +370,7 @@ export function ContentEditor({
     try {
       setNotice("");
       const imageUrl = await uploadLearningImage(file, uploadFolder);
-      insertHtml(
-        `<p><img class="content-image" src="${imageUrl}" alt="" /></p><p><br></p>`,
-      );
+      insertImageBlock(imageUrl, range);
       prepareContentImages();
       onFirstImage(imageUrl);
       syncValue();
@@ -353,8 +390,9 @@ export function ContentEditor({
 
     if (!file) return;
 
+    const range = currentEditorRange();
     event.preventDefault();
-    await insertImage(file);
+    await insertImage(file, range);
   }
 
   async function uploadImage(event: ChangeEvent<HTMLInputElement>) {

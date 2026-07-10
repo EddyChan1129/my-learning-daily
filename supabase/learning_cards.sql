@@ -113,6 +113,14 @@ alter table public.profiles enable row level security;
 alter table public.learning_cards enable row level security;
 alter table public.learning_comments enable row level security;
 
+-- Table privileges are checked before row-level security policies.
+grant select on public.categories, public.profiles, public.learning_cards,
+  public.learning_comments to anon, authenticated;
+grant insert on public.learning_comments to anon, authenticated;
+grant insert, update on public.profiles to authenticated;
+grant insert, update, delete on public.learning_cards to authenticated;
+grant update on public.learning_comments to authenticated;
+
 drop policy if exists "Anyone can view categories" on public.categories;
 create policy "Anyone can view categories"
 on public.categories
