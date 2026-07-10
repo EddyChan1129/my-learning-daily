@@ -8,6 +8,9 @@ const DEFAULT_TODOS = [
   "MQ",
   "SEO",
   "stripe",
+  "AI 總結1個月",
+  "AI translate",
+  "AI summarize in content",
 ];
 
 function seedTodos(): TodoItem[] {
