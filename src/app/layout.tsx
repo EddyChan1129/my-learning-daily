@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
-import { AuthButton } from "@/components/layout/AuthButton";
 import { Footer } from "@/components/layout/Footer";
-import { LanguageSelect } from "@/components/layout/LanguageSelect";
 import { Navbar } from "@/components/layout/Navbar";
 import { PageTransition } from "@/components/common/PageTransition";
 import { AppProviders } from "@/app/providers";
@@ -28,9 +26,7 @@ export default function RootLayout({
     <html lang="zh-Hant">
       <body>
         <AppProviders>
-          <LanguageSelect />
           <Navbar />
-          <AuthButton />
           <PageTransition>{children}</PageTransition>
           <Footer />
         </AppProviders>

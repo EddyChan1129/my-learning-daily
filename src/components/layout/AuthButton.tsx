@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { LanguageSelect } from "@/components/layout/LanguageSelect";
 import { Textarea } from "@/components/ui/textarea";
 import {
   getCurrentUser,
@@ -20,7 +21,7 @@ import type { User } from "@supabase/supabase-js";
 
 const supabase = getSupabase();
 
-export function AuthButton() {
+export function AuthButton({ onNavigate }: { onNavigate?: () => void }) {
   const { t } = useTranslation();
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -87,14 +88,15 @@ export function AuthButton() {
   async function signOut() {
     await supabase?.auth.signOut();
     setEditing(false);
+    onNavigate?.();
   }
 
   const displayName = profile?.username ?? user?.email ?? "";
   const avatarText = displayName.slice(0, 1).toUpperCase();
 
   return (
-    <div className="fixed right-3 top-3 z-10 grid justify-items-end gap-2 sm:right-4 sm:top-4">
-      <div className="flex max-w-[calc(100vw-124px)] items-center gap-1 rounded-full border border-stone-200 bg-white/95 p-1 shadow-[0_8px_24px_rgba(26,26,26,0.08)] backdrop-blur sm:max-w-[calc(100vw-220px)] sm:gap-2 sm:p-1.5">
+    <div className="relative grid w-full gap-2 sm:w-auto">
+      <div className="flex w-full items-center gap-2 rounded-xl border border-stone-200 bg-stone-50 p-1 sm:w-auto sm:rounded-full">
         {user ? (
           <>
             <button
@@ -114,12 +116,12 @@ export function AuthButton() {
                   avatarText
                 )}
               </span>
-              <span className="hidden max-w-36 truncate text-sm font-black text-neutral-700 sm:block">
+              <span className="block max-w-36 truncate text-sm font-black text-neutral-700">
                 {displayName}
               </span>
             </button>
             <Button
-              className="min-h-8 px-2.5 text-xs sm:min-h-9 sm:px-3 sm:text-sm"
+              className="min-h-8 px-2.5 text-xs sm:hidden"
               variant="secondary"
               onClick={signOut}
             >
@@ -127,20 +129,29 @@ export function AuthButton() {
             </Button>
           </>
         ) : (
-          <Link
-            className={buttonVariants({
-              className: "min-h-9 px-4",
-              variant: "default",
-            })}
-            href="/login"
-          >
-            {t("login")}
-          </Link>
+          <>
+            <div className="hidden w-32 sm:block">
+              <LanguageSelect />
+            </div>
+            <Link
+              className={buttonVariants({
+                className: "min-h-10 w-full px-4 sm:min-h-9 sm:w-auto",
+                variant: "default",
+              })}
+              href="/login"
+              onClick={onNavigate}
+            >
+              {t("login")}
+            </Link>
+          </>
         )}
       </div>
 
       {editing && user ? (
-        <div className="w-[min(360px,calc(100vw-24px))] border border-neutral-950 bg-white p-4 shadow-[6px_6px_0_#1a1a1a]">
+        <div className="w-[min(360px,calc(100vw-24px))] border border-neutral-950 bg-white p-4 shadow-[6px_6px_0_#1a1a1a] sm:absolute sm:right-0 sm:top-[calc(100%+0.75rem)] sm:z-50">
+          <div className="mb-3 hidden sm:block">
+            <LanguageSelect />
+          </div>
           <p className="mb-3 text-lg font-black text-neutral-950">
             {t("editProfile")}
           </p>
@@ -162,6 +173,9 @@ export function AuthButton() {
               onChange={(event) => setDescription(event.target.value)}
             />
             <Button onClick={saveProfile}>{t("save")}</Button>
+            <Button className="hidden sm:inline-flex" variant="secondary" onClick={signOut}>
+              {t("logout")}
+            </Button>
           </div>
         </div>
       ) : null}
