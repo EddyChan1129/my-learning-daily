@@ -1,5 +1,8 @@
 import { getSupabase } from "@/lib/supabase";
-import type { TodoItem } from "@/types/todo";
+import type { TodoInput, TodoItem } from "@/types/todo";
+
+const todoColumns =
+  "id, title, completed, priority, estimated_completion_date, created_at";
 
 function requireSupabase() {
   const supabase = getSupabase();
@@ -20,8 +23,9 @@ export async function getTodos() {
   const userId = await getUserId();
   const { data, error } = await supabase
     .from("todos")
-    .select("id, title, completed, created_at")
+    .select(todoColumns)
     .eq("user_id", userId)
+    .order("priority", { ascending: true })
     .order("created_at", { ascending: false })
     .returns<TodoItem[]>();
 
@@ -30,13 +34,13 @@ export async function getTodos() {
   return data ?? [];
 }
 
-export async function addTodo(title: string) {
+export async function addTodo(input: TodoInput) {
   const supabase = requireSupabase();
   const userId = await getUserId();
   const { data, error } = await supabase
     .from("todos")
-    .insert({ title, user_id: userId })
-    .select("id, title, completed, created_at")
+    .insert({ ...input, user_id: userId })
+    .select(todoColumns)
     .single<TodoItem>();
 
   if (error) throw error;
@@ -49,7 +53,7 @@ export async function toggleTodo(todo: TodoItem) {
     .from("todos")
     .update({ completed: !todo.completed })
     .eq("id", todo.id)
-    .select("id, title, completed, created_at")
+    .select(todoColumns)
     .single<TodoItem>();
 
   if (error) throw error;

@@ -55,6 +55,8 @@ create table if not exists public.todos (
   user_id uuid not null references auth.users(id) on delete cascade,
   title text not null check (length(trim(title)) between 1 and 500),
   completed boolean not null default false,
+  priority smallint not null default 3 check (priority between 1 and 4),
+  estimated_completion_date date,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -68,6 +70,9 @@ on public.learning_comments (card_id);
 
 create index if not exists todos_user_id_created_at_idx
 on public.todos (user_id, created_at desc);
+
+create index if not exists todos_user_id_priority_due_date_idx
+on public.todos (user_id, priority, estimated_completion_date);
 
 -- -----------------------------------------------------------------------------
 -- Seed data
