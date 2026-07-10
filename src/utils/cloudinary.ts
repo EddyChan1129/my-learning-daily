@@ -89,15 +89,20 @@ export async function uploadLearningImage(file: File, folder: string) {
 }
 
 export async function deleteCloudinaryAssets({
+  accessToken,
   folders,
   publicIds,
 }: {
+  accessToken: string;
   folders: string[];
   publicIds: string[];
 }) {
   const response = await fetch("/api/cloudinary/folder", {
     body: JSON.stringify({ folders, publicIds }),
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
     method: "DELETE",
   });
 

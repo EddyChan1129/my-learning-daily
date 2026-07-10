@@ -1,6 +1,24 @@
+import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
 export async function DELETE(request: Request) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const authorization = request.headers.get("authorization");
+
+  if (!supabaseUrl || !anonKey || !authorization) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  const supabase = createClient(supabaseUrl, anonKey, {
+    global: { headers: { Authorization: authorization } },
+  });
+  const { data } = await supabase.auth.getUser();
+
+  if (!data.user) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
   const cloudName =
     process.env.CLOUDINARY_CLOUD_NAME ??
     process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;

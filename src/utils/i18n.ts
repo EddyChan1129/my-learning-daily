@@ -73,8 +73,8 @@ export const resources = {
             register: "註冊",
             removeImage: "移除圖片",
             removeImageConfirm:
-                "移除這張圖片？儲存學習卡後，圖片會從內容和 Cloudinary 刪除。",
-            imageRemovedNotice: "圖片已移除。請儲存學習卡，系統會同步刪除舊圖片。",
+                "立即從內容和 Cloudinary 永久刪除這張圖片？此操作無法復原。",
+            imageRemovedNotice: "圖片已從內容和 Cloudinary 刪除。",
             save: "儲存",
             saving: "儲存中...",
             savingDoNotLeave: "正在儲存，請不要離開。",
@@ -183,9 +183,9 @@ export const resources = {
             register: "Register",
             removeImage: "Remove image",
             removeImageConfirm:
-                "Remove this image? After you save the learning card, it will be removed from the content and Cloudinary.",
+                "Permanently delete this image from the content and Cloudinary now? This cannot be undone.",
             imageRemovedNotice:
-                "Image removed. Save the learning card to sync and delete the old image.",
+                "Image deleted from the content and Cloudinary.",
             save: "Save",
             saving: "Saving...",
             savingDoNotLeave: "Saving. Please do not leave.",

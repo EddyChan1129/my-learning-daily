@@ -33,36 +33,6 @@ function ownerName(userEmail: string | undefined, profile: Profile | null) {
   return profile?.username ?? userEmail?.split("@")[0] ?? "user";
 }
 
-function cardPublicIds(card: Pick<LearningCard, "content" | "image_url">) {
-  return Array.from(
-    new Set(
-      [
-        cloudinaryPublicIdFromUrl(card.image_url),
-        ...cloudinaryPublicIdsFromContent(card.content),
-      ].filter((publicId): publicId is string => Boolean(publicId)),
-    ),
-  );
-}
-
-async function deleteCloudinaryPublicIds(request: Request, publicIds: string[]) {
-  if (publicIds.length === 0) return null;
-
-  const origin = new URL(request.url).origin;
-  const response = await fetch(`${origin}/api/cloudinary/folder`, {
-    body: JSON.stringify({ folders: [], publicIds }),
-    headers: { "Content-Type": "application/json" },
-    method: "DELETE",
-  });
-
-  if (response.ok) return null;
-
-  const data = await response.json().catch(() => null);
-  return NextResponse.json(
-    { error: data?.error ?? "Cloudinary image delete failed." },
-    { status: response.status },
-  );
-}
-
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -101,11 +71,6 @@ export async function PATCH(
     return NextResponse.json({ error: "Forbidden." }, { status: 403 });
   }
 
-  const previousPublicIds = cardPublicIds(currentCard);
-  const nextPublicIds = cardPublicIds(input.data);
-  const removedPublicIds = previousPublicIds.filter(
-    (publicId) => !nextPublicIds.includes(publicId),
-  );
   const { data, error } = await supabase
     .from("learning_cards")
     .update({
@@ -120,9 +85,6 @@ export async function PATCH(
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
-
-  const deleteError = await deleteCloudinaryPublicIds(request, removedPublicIds);
-  if (deleteError) return deleteError;
 
   return NextResponse.json({ card: data });
 }
@@ -183,7 +145,10 @@ export async function DELETE(
   const origin = new URL(request.url).origin;
   const deleteAssets = await fetch(`${origin}/api/cloudinary/folder`, {
     body: JSON.stringify({ folders, publicIds }),
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      Authorization: request.headers.get("authorization") ?? "",
+      "Content-Type": "application/json",
+    },
     method: "DELETE",
   });
 
