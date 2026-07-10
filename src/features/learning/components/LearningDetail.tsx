@@ -320,6 +320,11 @@ export function LearningDetail({ slug }: { slug: string }) {
             Created: {card.created_at ? dayjs(card.created_at).format("YYYY-MM-DD") : "-"} · Updated:{" "}
             {card.updated_at ? dayjs(card.updated_at).format("YYYY-MM-DD") : "-"}
           </p>
+          {message ? (
+            <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-bold text-red-800">
+              {message}
+            </p>
+          ) : null}
           {canEdit ? (
             <div className="mt-6 flex flex-wrap justify-end gap-2.5">
               <Button variant="secondary" onClick={() => setEditing(true)}>

@@ -83,6 +83,12 @@ export async function DELETE(request: Request) {
 
     const result = await deleteResources.json();
     Object.assign(deleted, result.deleted);
+    if (result.unauthorized?.length) {
+      return NextResponse.json(
+        { error: "Cloudinary API key is not authorized to delete these assets." },
+        { status: 403 },
+      );
+    }
 
     const folderPath = folder
       .split("/")
@@ -130,6 +136,12 @@ export async function DELETE(request: Request) {
 
     const result = await deleteResources.json();
     Object.assign(deleted, result.deleted);
+    if (result.unauthorized?.length) {
+      return NextResponse.json(
+        { error: "Cloudinary API key is not authorized to delete these assets." },
+        { status: 403 },
+      );
+    }
 
     const failedPublicIds = remainingPublicIds.filter(
       (publicId) => deleted[publicId] !== "deleted",
