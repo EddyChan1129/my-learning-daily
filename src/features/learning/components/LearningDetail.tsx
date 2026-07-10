@@ -19,6 +19,7 @@ import { useCategories } from "@/features/category/hooks/useCategories";
 import {
   getLearningCard,
   getLearningComments,
+  invalidateLearningCards,
 } from "@/features/learning/services/learning-card.service";
 import { getProfile } from "@/features/profile/services/profile.service";
 import { getSupabase } from "@/lib/supabase";
@@ -172,6 +173,7 @@ export function LearningDetail({ slug }: { slug: string }) {
         return;
       }
 
+      invalidateLearningCards();
       router.replace("/");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Delete failed.");

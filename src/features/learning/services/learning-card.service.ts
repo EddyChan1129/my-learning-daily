@@ -9,6 +9,10 @@ const learningCardsPromises = new Map<string, Promise<LearningCard[]>>();
 const learningCardPromises = new Map<string, Promise<LearningCard | null>>();
 const learningCommentPromises = new Map<string, Promise<LearningComment[]>>();
 
+export function invalidateLearningCards() {
+  learningCardsPromises.clear();
+}
+
 export async function getLearningCards(
   supabase: SupabaseClient,
   { force = false, userId }: { force?: boolean; userId?: string } = {},
