@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { LearningCategory } from "@/features/category/types";
+import type { LearningCategory } from "@/types/category";
 
 let categoriesPromise: Promise<LearningCategory[]> | null = null;
 

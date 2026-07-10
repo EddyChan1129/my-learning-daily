@@ -17,8 +17,9 @@ import {
   setDraftTitle,
   setFilter,
 } from "@/features/todo/stores/todoUiSlice";
-import type { TodoFilter, TodoItem } from "@/features/todo/types";
 import { useAppDispatch, useAppSelector } from "@/stores/hooks";
+import type { RootState } from "@/types/store";
+import type { TodoFilter, TodoItem } from "@/types/todo";
 import { cn } from "@/utils/cn";
 
 const todoQueryKey = ["todos"];
@@ -28,8 +29,10 @@ export function TodoListClient() {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const queryClient = useQueryClient();
-  const draftTitle = useAppSelector((state) => state.todoUi.draftTitle);
-  const filter = useAppSelector((state) => state.todoUi.filter);
+  const draftTitle = useAppSelector(
+    (state: RootState) => state.todoUi.draftTitle,
+  );
+  const filter = useAppSelector((state: RootState) => state.todoUi.filter);
   const todosQuery = useQuery({
     queryKey: todoQueryKey,
     queryFn: getTodos,

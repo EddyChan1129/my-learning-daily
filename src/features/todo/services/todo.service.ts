@@ -1,4 +1,4 @@
-import type { TodoItem } from "@/features/todo/types";
+import type { TodoItem } from "@/types/todo";
 
 const TODOS_STORAGE_KEY = "knowbit_todos";
 

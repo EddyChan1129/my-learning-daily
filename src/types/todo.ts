@@ -6,3 +6,8 @@ export type TodoItem = {
   completed: boolean;
   createdAt: string;
 };
+
+export type TodoUiState = {
+  draftTitle: string;
+  filter: TodoFilter;
+};

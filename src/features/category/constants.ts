@@ -1,4 +1,4 @@
-import type { LearningCategory } from "@/features/category/types";
+import type { LearningCategory } from "@/types/category";
 
 export const categoryImageById: Record<string, string> = {
   leetcode: "/images/category/leetcode.png",

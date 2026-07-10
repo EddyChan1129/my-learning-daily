@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { categoryImageForId } from "@/features/category/constants";
-import type { LearningCategory } from "@/features/category/types";
+import type { LearningCategory } from "@/types/category";
 import type { LearningCardInput } from "@/types/learning";
 import { contentSummary } from "@/utils/content";
 import { cloudinaryPublicIdsFromContent } from "@/utils/cloudinary";
