@@ -19,18 +19,18 @@ export function Navbar() {
 
   return (
     <nav
-      className="fixed left-1/2 top-16 z-20 w-[min(1160px,calc(100%-28px))] -translate-x-1/2 sm:top-4 sm:w-[min(1160px,calc(100%-40px))]"
+      className="fixed left-3 right-3 top-16 z-20 sm:left-1/2 sm:right-auto sm:top-4 sm:w-[min(1160px,calc(100%-40px))] sm:-translate-x-1/2"
       aria-label="Primary navigation"
     >
-      <div className="flex max-w-full items-center justify-between gap-3 overflow-x-auto rounded-[28px] border border-stone-200 bg-white/95 px-3 py-2 shadow-[0_16px_44px_rgba(26,26,26,0.12)] backdrop-blur">
+      <div className="grid grid-cols-1 rounded-2xl border border-stone-200 bg-white/95 p-1.5 shadow-[0_12px_32px_rgba(26,26,26,0.1)] backdrop-blur sm:flex sm:items-center sm:justify-between sm:gap-3 sm:rounded-[28px] sm:px-3 sm:py-2 sm:shadow-[0_16px_44px_rgba(26,26,26,0.12)]">
         <Link
-          className="flex h-14 w-48 shrink-0 items-center overflow-hidden rounded-2xl bg-[#fffaf0] px-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 sm:w-56"
+          className="hidden h-14 w-56 shrink-0 items-center overflow-hidden rounded-2xl bg-[#fffaf0] px-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 sm:flex"
           href="/"
           aria-label={t("dailyWall")}
         >
           <KnowbitLogo className="h-full w-full" />
         </Link>
-        <div className="flex items-center gap-1">
+        <div className="grid min-w-0 grid-cols-4 items-stretch gap-1 sm:flex sm:items-center">
           {NAV_ITEMS.map((item) => {
             const active = pathname === item.href;
 
@@ -38,7 +38,7 @@ export function Navbar() {
               <Link
                 key={item.href}
                 className={cn(
-                  "whitespace-nowrap rounded-full px-3 py-2 text-sm font-black text-neutral-600 transition hover:bg-stone-100 hover:text-neutral-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 sm:px-4",
+                  "flex min-h-10 min-w-0 items-center justify-center rounded-xl px-1.5 py-2 text-center text-xs font-black leading-tight text-neutral-600 transition hover:bg-stone-100 hover:text-neutral-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 sm:min-h-0 sm:whitespace-nowrap sm:rounded-full sm:px-4 sm:text-sm",
                   active && "bg-neutral-950 text-white hover:bg-neutral-950 hover:text-white",
                 )}
                 href={item.href}

@@ -94,7 +94,7 @@ export function AuthButton() {
 
   return (
     <div className="fixed right-3 top-3 z-10 grid justify-items-end gap-2 sm:right-4 sm:top-4">
-      <div className="flex max-w-[calc(100vw-128px)] items-center gap-2 rounded-full border border-stone-200 bg-white/95 p-1.5 shadow-[0_10px_30px_rgba(26,26,26,0.08)] backdrop-blur sm:max-w-[calc(100vw-220px)]">
+      <div className="flex max-w-[calc(100vw-124px)] items-center gap-1 rounded-full border border-stone-200 bg-white/95 p-1 shadow-[0_8px_24px_rgba(26,26,26,0.08)] backdrop-blur sm:max-w-[calc(100vw-220px)] sm:gap-2 sm:p-1.5">
         {user ? (
           <>
             <button
@@ -102,7 +102,7 @@ export function AuthButton() {
               type="button"
               onClick={() => setEditing(!editing)}
             >
-              <span className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-full bg-emerald-900 text-sm font-black text-white">
+              <span className="grid size-8 shrink-0 place-items-center overflow-hidden rounded-full bg-emerald-900 text-xs font-black text-white sm:size-9 sm:text-sm">
                 {profile?.photo_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -119,7 +119,7 @@ export function AuthButton() {
               </span>
             </button>
             <Button
-              className="min-h-9 px-3"
+              className="min-h-8 px-2.5 text-xs sm:min-h-9 sm:px-3 sm:text-sm"
               variant="secondary"
               onClick={signOut}
             >
