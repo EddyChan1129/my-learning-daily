@@ -78,9 +78,8 @@
 
   .learning-content .content-image {
     display: block;
-    width: 100%;
-    height: auto;
-    max-height: 70vh;
+    width: min(100%, 32.5rem);
+    height: 20rem;
     max-width: 100%;
     object-fit: contain;
     border: 1px solid #e5ded3;
@@ -92,13 +91,14 @@
   .learning-content [data-content-image-frame] {
     position: relative;
     display: block;
-    width: 100%;
+    width: min(100%, 32.5rem);
     max-width: 100%;
     line-height: 0;
   }
 
   .learning-content [data-content-image-frame] .content-image {
     width: 100%;
+    height: 20rem;
   }
 
   .learning-content .content-image-remove {
@@ -207,8 +207,16 @@
     }
 
     .learning-content .content-image {
-      height: auto;
-      max-width: 100%;
+      width: 100%;
+      height: 13.75rem;
+    }
+
+    .learning-content [data-content-image-frame] {
+      width: 100%;
+    }
+
+    .learning-content [data-content-image-frame] .content-image {
+      height: 13.75rem;
     }
   }
 
