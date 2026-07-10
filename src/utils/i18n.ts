@@ -21,7 +21,7 @@ export const resources = {
             createAccount: "建立帳戶",
             dailyPrompt: "每日記低一點進步，慢慢就會見到自己行遠咗。",
             dailyTagline: "所謂瘋子，就是重複做同樣的事情，卻期待會出現不同的結果。",
-            dailyWall: "每日一記",
+            dailyWall: "每日一記123123",
             dateLearned: "學習日期",
             delete: "刪除",
             description: "個人介紹",
