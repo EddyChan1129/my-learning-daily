@@ -50,6 +50,17 @@ create table if not exists public.learning_comments (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.todos (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  title text not null check (length(trim(title)) between 1 and 500),
+  completed boolean not null default false,
+  priority smallint not null default 3 check (priority between 1 and 4),
+  estimated_completion_date date,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 -- Foreign-key indexes are not created automatically by PostgreSQL.
 create index if not exists learning_cards_user_id_idx
 on public.learning_cards (user_id);
@@ -57,20 +68,77 @@ on public.learning_cards (user_id);
 create index if not exists learning_comments_card_id_idx
 on public.learning_comments (card_id);
 
+create index if not exists todos_user_id_created_at_idx
+on public.todos (user_id, created_at desc);
+
+create index if not exists todos_user_id_priority_due_date_idx
+on public.todos (user_id, priority, estimated_completion_date);
+
 -- -----------------------------------------------------------------------------
 -- Seed data
 -- -----------------------------------------------------------------------------
 
+update public.learning_cards
+set
+  category = case sub_field
+    when 'leetcode' then '技術實戰'
+    when 'javascript' then '技術實戰'
+    when 'springboot' then '技術實戰'
+    when 'security' then '技術實戰'
+    when 'networking' then '技術實戰'
+    when 'working issues' then 'Programmer 日常'
+    when 'interview question' then 'Programmer 日常'
+    else '作品與想法'
+  end,
+  sub_field = case sub_field
+    when 'leetcode' then 'coding'
+    when 'javascript' then 'coding'
+    when 'springboot' then 'backend'
+    when 'security' then 'architecture'
+    when 'networking' then 'architecture'
+    when 'working issues' then 'debugging'
+    when 'interview question' then 'career'
+    else 'thoughts'
+  end
+where sub_field in (
+  'leetcode',
+  'javascript',
+  'springboot',
+  'interview question',
+  'security',
+  'networking',
+  'working issues',
+  'other'
+);
+
+delete from public.categories
+where id in (
+  'leetcode',
+  'javascript',
+  'springboot',
+  'interview question',
+  'security',
+  'networking',
+  'working issues',
+  'other'
+);
+
 insert into public.categories (id, category, name, sort_order)
 values
-  ('leetcode', 'IT', 'leetcode', 1),
-  ('javascript', 'IT', 'javascript', 2),
-  ('springboot', 'IT', 'springboot', 3),
-  ('interview question', 'IT', 'interview question', 4),
-  ('security', 'IT', 'security', 5),
-  ('networking', 'IT', 'networking', 6),
-  ('working issues', 'IT', 'working issues', 7),
-  ('other', 'Other', 'other', 1)
+  ('coding', '技術實戰', 'Coding / 程式開發', 1),
+  ('backend', '技術實戰', 'Backend / API', 2),
+  ('database', '技術實戰', 'Database / 資料庫', 3),
+  ('architecture', '技術實戰', 'System Design / 架構', 4),
+  ('devops', '技術實戰', 'DevOps / 部署', 5),
+  ('ai-tools', '技術實戰', 'AI / 開發工具', 6),
+  ('debugging', 'Programmer 日常', 'Debug / 踩坑紀錄', 7),
+  ('practical-tips', 'Programmer 日常', '實用技巧', 8),
+  ('work-life', 'Programmer 日常', 'Programmer 工作日常', 9),
+  ('career', 'Programmer 日常', '職涯 / 面試', 10),
+  ('teamwork', 'Programmer 日常', '團隊協作', 11),
+  ('side-project', '作品與想法', 'Side Project', 12),
+  ('resources', '作品與想法', '資源分享', 13),
+  ('thoughts', '作品與想法', '隨筆 / 其他', 14)
 on conflict (id) do update
 set
   category = excluded.category,
@@ -104,6 +172,12 @@ before update on public.learning_cards
 for each row
 execute function public.set_updated_at();
 
+drop trigger if exists set_todos_updated_at on public.todos;
+create trigger set_todos_updated_at
+before update on public.todos
+for each row
+execute function public.set_updated_at();
+
 -- -----------------------------------------------------------------------------
 -- Row Level Security
 -- -----------------------------------------------------------------------------
@@ -112,6 +186,7 @@ alter table public.categories enable row level security;
 alter table public.profiles enable row level security;
 alter table public.learning_cards enable row level security;
 alter table public.learning_comments enable row level security;
+alter table public.todos enable row level security;
 
 -- Table privileges are checked before row-level security policies.
 grant select on public.categories, public.profiles, public.learning_cards,
@@ -120,6 +195,7 @@ grant insert on public.learning_comments to anon, authenticated;
 grant insert, update on public.profiles to authenticated;
 grant insert, update, delete on public.learning_cards to authenticated;
 grant update on public.learning_comments to authenticated;
+grant select, insert, update, delete on public.todos to authenticated;
 
 drop policy if exists "Anyone can view categories" on public.categories;
 create policy "Anyone can view categories"
@@ -204,5 +280,34 @@ for update
 to authenticated
 using (true)
 with check (viod = true);
+
+drop policy if exists "Users can view own todos" on public.todos;
+create policy "Users can view own todos"
+on public.todos
+for select
+to authenticated
+using ((select auth.uid()) = user_id);
+
+drop policy if exists "Users can insert own todos" on public.todos;
+create policy "Users can insert own todos"
+on public.todos
+for insert
+to authenticated
+with check ((select auth.uid()) = user_id);
+
+drop policy if exists "Users can update own todos" on public.todos;
+create policy "Users can update own todos"
+on public.todos
+for update
+to authenticated
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
+
+drop policy if exists "Users can delete own todos" on public.todos;
+create policy "Users can delete own todos"
+on public.todos
+for delete
+to authenticated
+using ((select auth.uid()) = user_id);
 
 commit;

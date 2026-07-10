@@ -85,6 +85,7 @@ export const resources = {
             title: "標題",
             todoAdd: "新增",
             todoBody: "用最短清單追住下一步，先記低要做，做完再劃走。",
+            todoDueDate: "預計完成日期",
             todoEmpty: "這個分類暫時未有待辦。",
             todoEyebrow: "下一步要做咩",
             todoFilter: {
@@ -95,8 +96,10 @@ export const resources = {
             todoLoadFailed: "讀取待辦失敗，請重試。",
             todoList: "待辦清單",
             todoPlaceholder: "新增一個待辦，例如：redis",
+            todoPriority: "優先次序（1 最高）",
             todoProgress: "完成進度",
             todoProgressBody: "做完就劃走，剩低嘅事會清楚好多。",
+            todoSignInRequired: "請先登入，待辦會安全儲存在你的帳戶。",
             tryAgain: "重試",
             uploadImage: "上載圖片",
             uploading: "上載中...",
@@ -197,6 +200,7 @@ export const resources = {
             todoAdd: "Add",
             todoBody:
                 "Keep the next step short, mark it down first, then cross it off.",
+            todoDueDate: "Estimated completion date",
             todoEmpty: "No todos in this filter yet.",
             todoEyebrow: "What is next",
             todoFilter: {
@@ -207,8 +211,10 @@ export const resources = {
             todoLoadFailed: "Could not load todos. Please try again.",
             todoList: "todo list",
             todoPlaceholder: "Add a todo, for example: redis",
+            todoPriority: "Priority (1 highest)",
             todoProgress: "Progress",
             todoProgressBody: "Cross off what is done so the next step stays clear.",
+            todoSignInRequired: "Sign in to save todos securely to your account.",
             tryAgain: "Try again",
             uploadImage: "Upload image",
             uploading: "Uploading...",
