@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,10 +17,12 @@ import {
 } from "@/features/profile/services/profile.service";
 import { getSupabase } from "@/lib/supabase";
 import type { Profile } from "@/types/learning";
+import { uploadCloudinaryImage } from "@/utils/cloudinary";
 import { cn } from "@/utils/cn";
 import type { User } from "@supabase/supabase-js";
 
 const supabase = getSupabase();
+const profileImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 export function AuthButton({ onNavigate }: { onNavigate?: () => void }) {
   const { t } = useTranslation();
@@ -30,6 +32,10 @@ export function AuthButton({ onNavigate }: { onNavigate?: () => void }) {
   const [username, setUsername] = useState("");
   const [description, setDescription] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState("");
+  const [profileMessage, setProfileMessage] = useState("");
+  const [saving, setSaving] = useState(false);
 
   async function loadProfile(currentUser: User) {
     if (!supabase) return;
@@ -41,6 +47,8 @@ export function AuthButton({ onNavigate }: { onNavigate?: () => void }) {
     setUsername(nextProfile.username);
     setDescription(nextProfile.description ?? "");
     setPhotoUrl(nextProfile.photo_url ?? "");
+    setPhotoPreviewUrl(nextProfile.photo_url ?? "");
+    setPhotoFile(null);
   }
 
   useEffect(() => {
@@ -62,28 +70,67 @@ export function AuthButton({ onNavigate }: { onNavigate?: () => void }) {
     return () => data.subscription.unsubscribe();
   }, []);
 
+  useEffect(
+    () => () => {
+      if (photoPreviewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(photoPreviewUrl);
+      }
+    },
+    [photoPreviewUrl],
+  );
+
+  function selectProfileImage(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    if (!profileImageTypes.has(file.type) || file.size > 5 * 1024 * 1024) {
+      setProfileMessage(t("profileImageInvalid"));
+      return;
+    }
+
+    setPhotoFile(file);
+    setPhotoPreviewUrl(URL.createObjectURL(file));
+    setProfileMessage("");
+  }
+
   async function saveProfile() {
     if (!supabase || !user) return;
 
-    const nextProfile = {
-      id: user.id,
-      username: username.trim() || user.email?.split("@")[0] || "User",
-      description: description.trim() || null,
-      photo_url: photoUrl.trim() || null,
-      updated_at: new Date().toISOString(),
-    };
+    setSaving(true);
+    setProfileMessage("");
 
-    const { data } = await supabase
-      .from("profiles")
-      .upsert(nextProfile)
-      .select()
-      .single();
+    try {
+      const nextPhotoUrl = photoFile
+        ? await uploadCloudinaryImage(photoFile, "user-profile")
+        : photoUrl.trim() || null;
+      const { data, error } = await supabase
+        .from("profiles")
+        .upsert({
+          id: user.id,
+          username: username.trim() || user.email?.split("@")[0] || "User",
+          description: description.trim() || null,
+          photo_url: nextPhotoUrl,
+          updated_at: new Date().toISOString(),
+        })
+        .select()
+        .single<Profile>();
 
-    if (data) {
+      if (error) throw error;
+
       setProfile(data);
       setProfileCache(data);
+      setPhotoUrl(data.photo_url ?? "");
+      setPhotoPreviewUrl(data.photo_url ?? "");
+      setPhotoFile(null);
+      setEditing(false);
+    } catch (error) {
+      setProfileMessage(
+        error instanceof Error ? error.message : t("profileSaveFailed"),
+      );
+    } finally {
+      setSaving(false);
     }
-    setEditing(false);
   }
 
   async function signOut() {
@@ -117,7 +164,7 @@ export function AuthButton({ onNavigate }: { onNavigate?: () => void }) {
                   <img
                     className="h-full w-full object-cover"
                     src={profile.photo_url}
-                    alt=""
+                    alt={displayName}
                   />
                 ) : (
                   avatarText
@@ -168,18 +215,59 @@ export function AuthButton({ onNavigate }: { onNavigate?: () => void }) {
               placeholder={t("username")}
               onChange={(event) => setUsername(event.target.value)}
             />
-            <Input
-              value={photoUrl}
-              placeholder={t("photoUrl")}
-              onChange={(event) => setPhotoUrl(event.target.value)}
-            />
+            <div className="flex items-center gap-3 rounded-lg border border-stone-200 bg-[#fffaf0] p-3">
+              <span className="grid size-16 shrink-0 place-items-center overflow-hidden rounded-full bg-emerald-900 text-lg font-black text-white">
+                {photoPreviewUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    className="h-full w-full object-cover"
+                    src={photoPreviewUrl}
+                    alt={displayName}
+                  />
+                ) : (
+                  avatarText
+                )}
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-black text-neutral-950">
+                  {t("profileImage")}
+                </p>
+                <p className="mt-0.5 text-xs text-neutral-500">
+                  {t("profileImageHint")}
+                </p>
+                <label
+                  className={buttonVariants({
+                    className:
+                      "mt-2 min-h-9 max-w-full cursor-pointer px-3 py-1 text-xs",
+                    variant: "secondary",
+                  })}
+                >
+                  <span className="truncate">
+                    {photoFile?.name ?? t("uploadImage")}
+                  </span>
+                  <input
+                    accept="image/jpeg,image/png,image/webp"
+                    className="sr-only"
+                    type="file"
+                    onChange={selectProfileImage}
+                  />
+                </label>
+              </div>
+            </div>
             <Textarea
               className="min-h-20"
               value={description}
               placeholder={t("description")}
               onChange={(event) => setDescription(event.target.value)}
             />
-            <Button onClick={saveProfile}>{t("save")}</Button>
+            {profileMessage ? (
+              <p className="text-sm font-bold text-red-700" role="alert">
+                {profileMessage}
+              </p>
+            ) : null}
+            <Button disabled={saving} onClick={saveProfile}>
+              {saving ? t("saving") : t("save")}
+            </Button>
             <Button className="hidden sm:inline-flex" variant="secondary" onClick={signOut}>
               {t("logout")}
             </Button>

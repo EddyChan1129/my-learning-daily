@@ -66,7 +66,10 @@ export const resources = {
             noAccount: "未有帳戶？註冊",
             password: "密碼",
             people: "人",
-            photoUrl: "相片網址",
+            profileImage: "個人圖片",
+            profileImageHint: "JPG、PNG 或 WebP，最多 5MB。",
+            profileImageInvalid: "請選擇 5MB 以下的圖片。",
+            profileSaveFailed: "未能儲存個人資料，請重試。",
             postComment: "送出留言",
             progressWallCardBody:
                 "每日記低一件小事，累積落嚟就會變成清晰嘅成長軌跡。",
@@ -180,7 +183,10 @@ export const resources = {
             noAccount: "No account? Register",
             password: "Password",
             people: "People",
-            photoUrl: "Photo URL",
+            profileImage: "Profile image",
+            profileImageHint: "JPG, PNG, or WebP up to 5MB.",
+            profileImageInvalid: "Choose an image under 5MB.",
+            profileSaveFailed: "Could not save your profile. Try again.",
             postComment: "Post comment",
             progressWallCardBody:
                 "Record one small thing each day and it becomes a clear path of growth.",

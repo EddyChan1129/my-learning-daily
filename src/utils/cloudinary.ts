@@ -65,7 +65,7 @@ export function cloudinaryPublicIdsFromContent(content: string) {
     );
 }
 
-export async function uploadLearningImage(file: File, folder: string) {
+export async function uploadCloudinaryImage(file: File, folder: string) {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("folder", folder);
