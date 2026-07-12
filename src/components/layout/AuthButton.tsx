@@ -17,6 +17,7 @@ import {
 } from "@/features/profile/services/profile.service";
 import { getSupabase } from "@/lib/supabase";
 import type { Profile } from "@/types/learning";
+import { cn } from "@/utils/cn";
 import type { User } from "@supabase/supabase-js";
 
 const supabase = getSupabase();
@@ -96,7 +97,13 @@ export function AuthButton({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <div className="relative grid w-full gap-2 sm:w-auto">
-      <div className="flex w-full items-center gap-2 rounded-xl border border-stone-200 bg-stone-50 p-1 sm:w-auto sm:rounded-full">
+      <div
+        className={cn(
+          "flex w-full items-center gap-2 sm:w-auto",
+          user &&
+            "rounded-xl border border-stone-200 bg-stone-50 p-1 sm:rounded-full",
+        )}
+      >
         {user ? (
           <>
             <button
