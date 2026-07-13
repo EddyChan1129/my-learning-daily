@@ -42,14 +42,27 @@ import type { User } from "@supabase/supabase-js";
 const supabase = getSupabase();
 type HomeScope = "all" | "mine";
 
-export function LearningWallClient({ scope = "all" }: { scope?: HomeScope }) {
+export function LearningWallClient({
+  scope = "all",
+  initialCards,
+  initialProfiles,
+}: {
+  scope?: HomeScope;
+  initialCards?: LearningCard[];
+  initialProfiles?: Record<string, Profile>;
+}) {
   const { t } = useTranslation();
   const isMyLearning = scope === "mine";
-  const [cards, setCards] = useState<LearningCard[]>([]);
-  const [profiles, setProfiles] = useState<Record<string, Profile>>({});
+  const hasInitialCards = initialCards !== undefined;
+  const [cards, setCards] = useState<LearningCard[]>(initialCards ?? []);
+  const [profiles, setProfiles] = useState<Record<string, Profile>>(
+    initialProfiles ?? {},
+  );
   const [user, setUser] = useState<User | null>(null);
   const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(() => Boolean(supabase));
+  const [loading, setLoading] = useState(
+    () => Boolean(supabase) && !hasInitialCards,
+  );
   const [showForm, setShowForm] = useState(false);
   const [draftUploadId, setDraftUploadId] = useState(() =>
     readableLearningId([], dayjs().format("YYYY-MM-DD")),
@@ -62,7 +75,7 @@ export function LearningWallClient({ scope = "all" }: { scope?: HomeScope }) {
   useEffect(() => {
     if (!supabase) return;
 
-    if (!isMyLearning) loadCards();
+    if (!isMyLearning && !hasInitialCards) loadCards();
 
     getCurrentUser(supabase).then((currentUser) => {
       setUser(currentUser);

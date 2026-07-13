@@ -17,7 +17,7 @@ import { getSupabase } from "@/lib/supabase";
 import {
   cloudinaryPublicIdFromUrl,
   deleteCloudinaryAssets,
-  uploadLearningImage,
+  uploadCloudinaryImage,
 } from "@/utils/cloudinary";
 import { sanitizeContent } from "@/utils/content";
 
@@ -406,7 +406,7 @@ export function ContentEditor({
 
     try {
       setNotice("");
-      const imageUrl = await uploadLearningImage(file, uploadFolder);
+      const imageUrl = await uploadCloudinaryImage(file, uploadFolder);
       insertImageBlock(imageUrl, range);
       prepareContentImages();
       onFirstImage(imageUrl);

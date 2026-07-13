@@ -37,10 +37,16 @@ import type { User } from "@supabase/supabase-js";
 
 const supabase = getSupabase();
 
-export function LearningDetail({ slug }: { slug: string }) {
+export function LearningDetail({
+  slug,
+  initialCard,
+}: {
+  slug: string;
+  initialCard?: LearningCard;
+}) {
   const { t } = useTranslation();
   const router = useRouter();
-  const [card, setCard] = useState<LearningCard | null>(null);
+  const [card, setCard] = useState<LearningCard | null>(initialCard ?? null);
   const [user, setUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -314,10 +320,16 @@ export function LearningDetail({ slug }: { slug: string }) {
           <time className="text-sm font-bold text-neutral-600">
             {dayjs(card.learned_date).format("YYYY-MM-DD")}
           </time>
-          <LearningContent
-            className="mt-6 text-lg text-neutral-950 [&_.text-large]:text-2xl"
-            html={card.content}
-          />
+          {card.content ? (
+            <LearningContent
+              className="mt-6 text-lg text-neutral-950 [&_.text-large]:text-2xl"
+              html={card.content}
+            />
+          ) : (
+            <p className="mt-6 text-lg leading-relaxed text-neutral-950">
+              {card.summary}
+            </p>
+          )}
           <p className="mt-7 text-sm text-neutral-600">
             Created: {card.created_at ? dayjs(card.created_at).format("YYYY-MM-DD") : "-"} · Updated:{" "}
             {card.updated_at ? dayjs(card.updated_at).format("YYYY-MM-DD") : "-"}

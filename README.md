@@ -20,6 +20,7 @@ npm run dev
 Set these in `.env.local`:
 
 ```bash
+NEXT_PUBLIC_SITE_URL="https://my-learning-daily.vercel.app"
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=
@@ -31,6 +32,9 @@ RESEND_API_KEY=
 RESEND_FROM_EMAIL="Knowbit <onboarding@resend.dev>"
 my_email="abc@gmail.com"
 ```
+
+Set `NEXT_PUBLIC_SITE_URL` to the production origin so canonical URLs,
+`robots.txt`, and `sitemap.xml` point to the live site.
 
 Keep `CLOUDINARY_API_SECRET` and `RESEND_API_KEY` server-only. Never prefix
 them with `NEXT_PUBLIC_`.
